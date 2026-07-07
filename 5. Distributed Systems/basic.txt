@@ -1,0 +1,11 @@
+Distributed Systems
+├── CAP teoremasi (amalda nimani anglatishini)
+├── Consensus algoritmlar: Raft, Paxos (asoslari)
+├── Sharding strategiyalari (consistent hashing)
+├── Replikatsiya: synchronous vs asynchronous
+├── Eventual consistency vs strong consistency
+├── Distributed locking (Redis RedLock)
+├── Circuit breaker, retry, backoff pattern
+└── Two-phase commit (2PC)
+
+Resurslar: "Designing Data-Intensive Applications" (DDIA) — bu kitob Senior uchun bibliya.

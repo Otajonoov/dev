@@ -1,0 +1,1 @@
+- **String** - belgilar ketma-ketligi

@@ -1,0 +1,1086 @@
+6. Trace: Timeline & Internals
+Built-in profilers give you lots of runtime data. Still, these tools mostly show either a summary or a static
+snapshot. This can make it hard for a developer to really see how a Go program changes and moves over
+513
+time. For example, a profiler might say:
+90% of allocations happen at line 35 in server.go
+This tells you where the memory pressure starts, but it does not reveal which goroutine performed the
+allocation, when it happened, or what else was occurring in the program at the same time. What Go lacked
+was a tool for a dynamic and detailed view of execution, including the precise timing of events as they
+occur.
+That is what the Go execution tracer is designed for. The tracer provides a timeline of events as your
+program runs, helping you answer in-depth questions about goroutine behavior, such as:
+• When did this goroutine actually run?
+• How long did it run before it became blocked?
+• What caused it to block?
+• Which other goroutine or event unblocked it?
+• How did garbage collection affect the execution flow of this goroutine?
+With the execution tracer, you can follow the full lifecycle of a goroutine. For example, imagine your web
+server starts a new goroutine for every request:
+go handleConnection(conn)
+With tracing, you can see when handleConnection started, how long it spent waiting on I/O, how often the
+scheduler stopped it, and if it was ever blocked on a mutex or a channel. This level of detail is extremely
+helpful for understanding concurrency, finding bottlenecks, and debugging deadlocks.
+Tracing is built into every Go binary and can be turned on during testing, at runtime using an HTTP
+endpoint, or directly in your code. When tracing is off, it has almost no effect on performance.
+The main idea is simple. When you turn on tracing, the Go runtime starts to record a series of events as
+your program runs. These events show key runtime activities, and each one is timestamped very precisely,
+down to nanoseconds. Each event also records details like what type of event it is, the OS thread ID, the
+logical processor ID, the goroutine ID, a stack trace, and other fields based on the context. In Go, the word
+"processor" means a logical unit set by GOMAXPROCS. This is the maximum number of goroutines that can
+run at the same time, not the number of physical CPU cores.
+The tracer records different types of events, such as:
+• Scheduling events, which show when goroutines are started, blocked, unblocked, or ended,
+• Network activity, which logs when goroutines block or resume on network I/O,
+• System calls, which record when goroutines enter or leave a syscall,
+• Garbage collection, which tracks when GC starts and ends, including steps like sweeping,
+• User-defined events and logs, which you can add to the trace for custom tracking.
+514
+After you collect a trace with the runtime package, you can look at it with the built-in trace tool. This tool
+opens up a browser-based viewer that shows a timeline for all goroutines, logical processors, and system
+threads. By exploring this timeline, you can see the life of each goroutine, spot bottlenecks, and find the
+causes of slowdowns.
+Turning On Tracing (go test, HTTP, code)
+You can start tracing using the go test tool with the -trace flag. This way is best when you want to analyze
+performance in a controlled test run.
+For example, you can run a specific benchmark and record a trace with this command:
+go test -trace=trace.out -bench=. -benchtime=10s -cpu=16
+This saves the trace to a file called trace.out. Later, you can analyze it using go tool trace.
+For applications that are already running, such as servers, you can trigger tracing through an HTTP handler
+at /debug/pprof/trace. You pass in a seconds parameter to control how long the trace should last. This
+uses the same runtime tracing APIs and lets you trace remotely without changing or rebuilding your code.
+curl http://localhost:6060/debug/pprof/trace?seconds=5 > trace.out
+The most flexible way to use tracing is through the programmatic API in the runtime/trace package:
+func main() {
+  f, err := os.Create("trace.out")
+  if err != nil {
+  log.Fatal(err)
+  }
+  defer f.Close()
+  if err := trace.Start(f); err != nil {
+  log.Fatal(err)
+  }
+  defer trace.Stop()
+  // Your logic here
+  ...
+}
+Tracing by default gives you lots of information about memory, such as when garbage collection runs, how
+the heap size changes, and more. If you want even more detail about memory, you can set the environment
+variable GODEBUG=traceallocfree=1. When you do this, the trace includes three extra groups of events:
+heap span events, heap object events, and goroutine stack events.
+• Heap span events: Memory spans are how the runtime manages memory pages. Each span usually
+515
+covers several pages, often 8KB each. These events show when the runtime allocates or frees memory
+regions. You also see all current spans at the start of tracing.
+• Heap object events: These show every time your program allocates or frees a heap object. You see
+when an object is allocated (malloc), freed (free), and all heap objects at the start of tracing.
+• Goroutine stack events: These events show stack growth for goroutines. You see when a stack grows
+or is freed.
+You should not use this detailed tracing for normal profiling, because it slows down your program a lot.
+Regular traces and heap profiles are enough for most performance work and have much lower cost. This
+detailed memory trace feature is still experimental. It creates a huge amount of data and can slow your
+program down a lot. But it lets you see exactly how Go manages memory in ways that were never possible
+before.
+Visualizing Traces
+Proc-Oriented View (per-P lanes & flows)
+The "proc view" is one of the main ways to visualize data in Go's trace tool. This view shows a timeline of
+events, sorted by logical processors (P), so you can see exactly what was happening in your Go program
+during the trace period.
+When you open the trace viewer and use the proc view, you will see a complex layout with several sections
+stacked vertically.
+At the very top is the STATS section, which holds three important time series graphs:
+Illustration 231. Goroutines, heap, and thread statistics
+Here is what each graph shows:
+• The "Goroutines" graph displays the number of active goroutines over time. If you click any point on the
+timeline, you will get a breakdown of the goroutine states at that moment. You can see how many were
+running, how many were runnable (ready to be scheduled), and how many were waiting (blocked). This
+graph helps you understand your app's concurrency and spot possible scheduling problems.
+• The "Heap" graph shows memory usage. The orange line is total heap allocation in bytes. The green
+line is the GC threshold, which marks when the next garbage collection cycle will start. This view helps
+you see memory patterns and how garbage collection affects your program.
+• The "Threads" graph shows the number of OS threads Go sees as active (running or in a system call). If
+you move your mouse along the timeline, you will notice that the count goes up when threads start
+working (when their Ps are running) and goes down as soon as they are parked.
+Below the STATS section are several more timelines, each focused on key runtime events:
+516
+Illustration 232. GC, network, and syscall events timeline
+These show garbage collection events and runtime events that cause goroutines to wake up:
+• The "GC" timeline shows when garbage collection is happening and what phase it is in, such as mark or
+sweep. GC activity appears as colored blocks, and you can click them to see details about each GC
+event.
+• The "Network" lane shows unblock events when goroutines are woken up because of network activity,
+such as when data arrives on a socket. These events have reasons like "network" and are handled by
+the NetpollP special resource.
+• The "Timers" lane shows when goroutines are woken up by timers, like after time.Sleep() or
+time.After() finishes. These events are handled by the TimerP special resource.
+• The "Syscalls" lane shows when goroutines come back from system calls that blocked. These events
+are handled by the SyscallP special resource.
+If your app does not use any network operations, timer functions, or blocking syscalls during the trace,
+these special lanes will not appear.
+NOTE
+What are TimerP and SyscallP?
+In the execution trace viewer, every vertical "lane" is labeled with a numeric P-ID. Real P-IDs
+are numbered from 0 up to GOMAXPROCS-1 and correspond to the actual processors that
+run Go code. Sometimes, however, the runtime needs to record an event that is not linked
+to any real P.
+To keep the timeline organized, the runtime creates a few special, or "pseudo," processor
+IDs. These events get their own lanes:
+• TimerP is a pseudo-P for timer-related wake-ups. When a sleeping goroutine's timer
+expires, the timer thread wakes it up. That wake-up is shown on the TimerP lane
+because no real processor was involved at that moment.
+• SyscallP is a pseudo-P for wake-ups that occur when a goroutine returns from a
+blocking system call. When a goroutine enters a long syscall, its P is returned to the
+scheduler. When the syscall finishes, the goroutine becomes runnable again, but at that
+moment, it does not yet have a P.
+The main part of the trace viewer shows timelines labeled "Proc 0", "Proc 1", and so on. Each one
+represents a logical processor (based on your GOMAXPROCS setting). Each processor can run only one
+goroutine at a time.
+517
+Illustration 233. Goroutine execution spans across multiple processors
+Let's break down how to read these timelines:
+• Colored horizontal bars show when goroutines are running. Each goroutine has its own color and label,
+such as "G1" or "G2". The label usually shows the main function the goroutine is running—for example,
+"G1 runtime.main" means goroutine 1 is running the runtime.main function.
+• When a goroutine moves to a different processor, its colored bar continues but appears in a new
+processor lane. This happens when goroutines are parked or preempted by the scheduler.
+• Under each execution bar, you may see small markers or vertical lines that indicate events in that
+goroutine's lifecycle, such as:
+◦ When the goroutine was created
+◦ When a function call or return occurred
+◦ Synchronization events (mutex locks and unlocks, channel operations)
+◦ System calls
+◦ Garbage collection activity
+Each colored bar in a processor row means that goroutine was running on that processor at that time. The
+color for each goroutine stays the same, even when it moves between processors, so you can easily follow
+its path.
+You can click on any execution bar to see a popup with more details, including:
+• How long the span lasted
+• The stack trace when the goroutine stopped or yielded
+• What made the goroutine stop running, like a channel operation or locking a mutex
+518
+Illustration 234. Execution slice reveals goroutine duration and context
+When you click on a slice, you get a detail panel. This panel shows complete info about that goroutine's run
+period. For example, in the image, goroutine G211 is running the function StartUnmarshalWorkers.func1
+from the VictoriaMetrics code.
+The span for this goroutine starts at "4,228,638,336 ns" (about 4.23 seconds) after the trace begins. The
+"Wall Duration" value of 2,157,696 ns means this execution span lasted about 2.16 milliseconds.
+When you look at the stack trace, you will see two parts:
+• "Start Stack Trace": This shows which functions were being called when the goroutine started running.
+The most recent function call is listed at the top.
+• "End Stack Trace": This shows the functions being called when the goroutine stopped running, again
+with the most recent call at the top.
+In this example, we can see that goroutine G211 started its execution by locking a mutex with
+sync.(*Mutex).Lock(). It stopped when it was blocked while waiting to receive from a channel, shown by
+runtime.chanrecv.
+Now, look at the event on the right side. The "unblock (sync)" incoming flow means this G211 goroutine was
+blocked on a synchronization primitive, and a different goroutine did something that unblocked it.
+If we hover over the "unblock (sync)" link in the properties panel, the trace viewer highlights a flow arrow
+between the two goroutines.
+This makes it much easier to see which operations are directly related:
+Illustration 235. Flow (red) arrow connects blocking and unblocking goroutines
+We can also click on the "unblock (sync)" link. This opens more details about the flow event, such as the
+event ID, how long the flow arrow lasted, and more.
+519
+The "outgoing flow" section will show which other goroutines were unblocked by the current goroutine.
+There is also a "Related Events" section. This area shows events that are causally linked in the Go
+execution trace. When you pick a goroutine execution span in the viewer, it figures out which other events
+are related to that span. These related events are grouped in three ways:
+• Preceding Events: These are events that happened before your chosen goroutine started running. They
+came earlier and might have caused your goroutine to start.
+Illustration 236. Visualizing causality: curved arrows show goroutine flow events
+• Following Events: These are events that happened after your goroutine finished. Often these are the
+next goroutine that started running or any goroutines that were unblocked by yours.
+• All Connected Events: This group gives you the full "conversation" your goroutine was involved in. It
+includes both the preceding and following events, plus any others that belong to the same chain of
+causes and effects.
+There is another view in the trace viewer that is a bit hidden, called the "trace breakdown". To see it, look to
+the far right of the trace viewer and click the "File size stats" button.
+520
+Illustration 237. Trace event summary: see where time and space go
+This feature analyzes your trace and gives you a statistical breakdown by event type. You will see counts
+and categories for each event in the trace:
+1. counter (357,250 events): These events track numeric values that change over time and are used to
+make time-series graphs.
+◦ Goroutines (273,413 events): Each event records how many goroutines are in each state (running,
+runnable, or waiting) at a certain moment. A high count means a lot of goroutine state changes.
+◦ Heap (70,465 events): Each event shows a change in heap memory allocation or in the garbage
+collection target.
+◦ Threads (13,372 events): These show how many times the thread state counter was updated during
+the trace. You will see lots of these if threads start, stop, or enter/exit syscalls often.
+2. flows (164,124 events): These show causal relationships, like when one goroutine unblocks another.
+These are what create the arrows you see in the trace view.
+◦ unblock (chan receive) (162,450 events): Shows when a goroutine is unblocked by getting data
+from a channel.
+◦ unblock (sync) (940 events): Shows when a goroutine is unblocked by a sync operation, such as a
+mutex or WaitGroup.
+◦ unblock (system goroutine wait) (454 events) and other smaller types: These track other causes
+that unblock goroutines, each representing a different way for a goroutine to resume work.
+521
+3. begin_end (93,748 events): These mark the start and end of an activity, so you can see how long
+something took.
+4. instant (13,383 events): These are single point-in-time events with no duration. They show up as dots
+in the trace.
+◦ proc start (6,690 events): Shows when a processor (P) started to do work.
+◦ proc stop (6,682 events): Shows when a processor (P) stopped doing work.
+◦ There are also a few other instant event types with lower counts.
+These stats are useful because they show exactly what your trace data is made of. For example, if you see
+a lot of channel operation events (like the 162,450 unblock events from channel receives), it means your
+application relies heavily on Go's channels for communication.
+Thread-Oriented View (per-thread lanes)
+OS threads are the real execution units that the operating system manages. The thread-oriented view in the
+trace viewer lets you see how these OS threads are used during your program's run.
+NOTE
+If you are not familiar with the MPG model, or if you need a refresher, please go back to the
+start of this chapter.
+When you open the trace viewer at http://[::]:<port>/trace?view=thread, each row now stands for an
+OS thread instead of a logical processor.
+Threads are labeled by their thread ID, such as "Thread 1" or "Thread 2". These are the actual thread IDs
+from the operating system, not logical processors or goroutines, and not any internal runtime thread ID.
+Illustration 238. Visualizing Go program execution by OS thread
+Usually, the number of threads is about the same as, or just above, the number of logical processors you
+have set with GOMAXPROCS. If your program creates too many threads, your performance will get much
+worse.
+This view works almost the same as the "proc view". All the explanations and details about the "proc view"
+also apply to the thread view.
+522
+Goroutine Analysis Tools (summary, breakdown, ranges)
+The goroutine analysis view in Go's trace viewer is available at /goroutines (e.g.,
+http://[::]:8086/goroutines). This view shows a breakdown of goroutine behavior during your program's
+execution. It is a very useful tool, though often overlooked, for spotting performance bottlenecks and
+understanding patterns in your Go programs.
+You will see a table that groups goroutines by their start location, which is usually the function name where
+the goroutine was created. Each row shows:
+1. Start location: The function where the goroutine started, which acts as the group's identifier
+2. Count: The total number of goroutines in this group
+3. Total execution time: The total time all goroutines in this group spent running code
+Illustration 239. Which goroutines are costing you the most time?
+By default, the table is sorted by total execution time. The groups at the top are the ones that used the
+most CPU time. This helps you quickly see which types of goroutines are costing you the most.
+If you click on a goroutine group, you will go to a detailed view at /goroutine?name=[function_name]. Here,
+each goroutine in the group is shown in detail. This page has three main sections: summary, breakdown,
+and special ranges.
+The summary section gives you high-level details about the group:
+• The function where the goroutines were created,
+• How many goroutines are in the group,
+• What percentage of total program execution time is taken by this group.
+523
+Illustration 240. Goroutine group summary: creation site, count, and execution share
+The summary also includes links to related profiles, such as network wait, sync block, syscall, and
+scheduler wait. These are explained in the following sections.
+The breakdown section is the main part of the goroutine analysis view. It is shown as a table with columns
+that use different colors for different states. These states show where a goroutine spent its time, such as
+executing code, blocked on synchronization, or waiting on the scheduler.
+Illustration 241. Goroutine state breakdown: execution, blocking, and scheduler waits
+Each row in the breakdown table stands for one goroutine, identified by its unique ID.
+The columns in the breakdown table show different time categories. These are mutually exclusive, which
+means a goroutine can only be in one state at any one time. The main time categories in the breakdown
+section are:
+• Execution time (red): This is the useful time when the goroutine is actually running on a processor and
+doing its assigned work. The trace records every time a goroutine enters the GoRunning state and
+measures how long it stays active before blocking, yielding, or ending.
+• Block time by reason (purple): This tracks how long the goroutine is blocked, and it breaks down the
+blocking time by reason. For example, it shows when a goroutine is blocked on a channel receive,
+channel send, select, mutex, or something else. If the reason is empty, it means the trace did not
+capture what caused that blocking period.
+◦ Block time (syscall): This is the time a goroutine had to give up its processor (P) because a system
+524
+call was blocking and waiting for something outside the program. Not all syscalls are blocking, but
+this counts only the time for blocking ones.
+• Scheduler wait time (blue): This is the time a goroutine spends waiting for a processor because there
+are more goroutines ready to run than processors available. This helps you spot if your program has
+scheduler bottlenecks, where goroutines are ready but have to wait for CPU resources.
+• Syscall execution time (dark purple): This is the time a goroutine is actually running system call code
+while still owning a processor. This is when the syscall is running but has not yet released the
+processor back to the scheduler.
+• Unknown time (gray): This is time that does not fit into any other category. It is calculated as whatever
+time is left after adding up all other categories. If you see a lot of unknown time, it might mean there
+are gaps in the trace or some runtime activity that is not tracked by the trace system.
+One of the most helpful visuals in the breakdown section is the stacked bar graph. This is a compact
+horizontal bar that shows how the time for each goroutine is split across the different states.
+Each part of the bar is color-coded to match its category. The width of each segment shows the proportion
+of total lifetime the goroutine spent in that state. This makes it easy to see at a glance where the time went
+for each goroutine.
+NOTE
+There is a small but useful feature: you can sort the breakdown table by clicking any
+column header. By default, it sorts by total time in descending order.
+The last section is called "Special Ranges". This section shows periods where goroutines were part of
+specific runtime activities, mostly related to garbage collection.
+Only goroutines that spent time in at least one special range will appear in this table.
+Illustration 242. Per-goroutine GC participation times (incremental sweep, mark assist, stop-the-world)
+The "Special Ranges" section is different from the "Breakdown" section above it in an important way. The
+"Breakdown" section shows time categories that never overlap (like execution time or blocking time), but
+the "Special Ranges" section shows periods that can overlap with regular execution statistics.
+This means the time shown in special ranges is not separate from execution time. Instead, it gives you
+525
+another view of how a goroutine's time was used.
+The Go runtime tracks these special periods with events called RangeBegin, RangeActive, and RangeEnd.
+These events show when a goroutine enters, is active in, or leaves a special runtime activity. The trace
+viewer uses these to add up the time each goroutine spent in these activities.
+The most common special ranges you'll see include:
+• GC mark assist: This is the time a goroutine spent helping the garbage collector mark objects.
+Sometimes, when garbage collection is running and needs extra help, the runtime makes regular
+goroutines help with marking. This can slow down their main work for a while.
+• GC incremental sweep: This is the time spent cleaning up memory after the mark phase. Like mark
+assist, it can take time away from the goroutine's main task.
+• Stop-the-world phases (several kinds): These are periods when the goroutine was stopped because of
+"stop-the-world" phases during garbage collection or other runtime events.
+• GC concurrent mark phase: This shows time when the goroutine was running while the garbage
+collector was marking objects at the same time as regular execution.
+Because these activities can overlap, a goroutine might be both running code (counted as "Execution time"
+in the Breakdown) and helping with garbage collection (counted as "GC mark assist" in Special Ranges) at
+the same moment.
+Profiles Generated From Traces (scheduler, sync, syscall, net)
+The Go execution trace supports several special profile types that you can generate from trace data. These
+profiles are different from the usual pprof profiles because they are created by analyzing state changes
+and events inside the trace, not by runtime sampling.
+There are 4 main profile types supported by the execution trace: block profiles, scheduler latency profiles,
+syscall profiles, and I/O profiles.
+• Scheduler latency profile: This tracks the delay between when a goroutine becomes runnable (ready to
+run) and when it actually starts running on a processor (P). For example, if a goroutine is waiting for
+data from a channel, when the data arrives, it is unblocked and becomes runnable. But it still has to
+wait for the scheduler to pick it up and actually run it. The time between being unblocked and starting
+execution is called scheduler latency.
+• Synchronization blocking profile: This shows the time goroutines spend waiting for synchronization
+reasons. It tracks time spent waiting on channels, mutexes, wait groups, and other sync primitives. The
+profile adds up all the time goroutines wait at each stack trace location. For example, if five goroutines
+each wait 100 ms on a mutex at the same code location, the profile will show 500 ms of contention at
+that spot.
+• Syscall profiles: These profiles work the same way as the sync blocking profile, but focus on time
+spent waiting for system calls. The trace can tell the difference between blocking and non-blocking
+syscalls.
+• Network blocking profiles: This profile is different from the block profile in standard pprof profiling.
+When a goroutine calls a blocking network operation, the runtime parks the goroutine and lets others
+run. The block profile itself ignores I/O waits and does not report anything about sockets. It only
+focuses on sync objects like channels, mutexes, sync.Cond, and select.
+526
+These trace-based profiles can be downloaded and used with go tool pprof like other profiles.
+For example, let's look at a scheduler latency profile:
+Illustration 243. Channel send is top scheduler latency hotspot
+The runtime.chansend1 function is used by the Go runtime when a channel send must block. For example,
+if your code does:
+ch <- v // sending on an unbuffered or full channel
+If there is no receiver ready, the sending goroutine is parked and cannot continue. When a receiver arrives,
+the runtime wakes up the sender and puts it on the run queue.
+From that moment until a processor finally picks it up, the goroutine is "runnable" but not running yet.
+In this trace, all goroutines that were unblocked after waiting in chansend1 spent a combined total of 42.7
+seconds waiting in the run queue before they could run again. This was 93% of all runnable-queue time for
+the whole program.
+NOTE
+It is important to note that this is not one goroutine stalled for 42 seconds. Instead, it is
+thousands or even millions of very short stalls (often microseconds or milliseconds each).
+The trace adds up all these tiny stalls because they all happened at the same channel send
+location.
+This shows that the channel send at this code location is a major hotspot for contention. Many goroutines
+block here and then wake up together, causing a lot of time to be wasted waiting to run. If you can reduce
+this contention (for example, by making the channel buffer larger, speeding up the consumer, sharding, or
+batching), you can directly cut down that 42 seconds and make your program faster.
+527
+Adding Semantics: Tasks, Regions, Logs
+Tracing collects a huge amount of low-level runtime information, such as goroutine state changes, system
+calls, garbage collection, and scheduler activity, as we have seen in earlier sections. But there is still a big
+gap between what the runtime can see and what you, as a developer, actually care about.
+For example, if you look at a typical trace of a web server, you might find thousands of goroutine creations,
+network I/O events, memory allocations, and scheduler preemptions. Yet it is almost impossible to answer
+simple questions like:
+• Which goroutines handled the same HTTP request?
+• How long did it take to process a specific user's order?
+• Which database queries were part of the same transaction?
+• Why was one request slower than another, even if they used the same code?
+The trace might tell you that goroutine 147 blocked on a channel at a certain time, but it will not tell you that
+this was actually the payment validation step for customer 12345's order. The runtime knows what
+happened, but the meaning of each action is lost.
+User annotations add a semantic layer that we, as developers, can use to connect our application logic to
+the runtime trace. This lets us add business meaning to the trace data. Instead of just seeing a list of
+runtime events, we get a clear story about what our app is doing at the business level. We can add three
+types of semantic information: task, region, and log.
+Tasks represent logical units of work that may include many goroutines and are meaningful in our
+application. For example, we can create a task for "process HTTP request" or "execute database
+transaction". By marking a task, we tell the tracer: "all activity within this context belongs to this logical
+operation".
+The task system supports a hierarchy. Tasks can have parent and child relationships, letting us model
+complex operations with many steps:
+ctx, task := trace.NewTask(parentCtx, "processRequest")
+defer task.End()
+When you create a new task, the tracer looks for a parent task in the context using a special key.
+processRequest (top-level)
+├── readFromDB (child #1)
+│ └── event: query=SELECT …
+└── renderResponse (child #2)
+  └── event: tmpl=home.html
+If the context does not have a parent, the new task is a top-level task. This inheritance means that any work
+done inside the task context is automatically grouped under that task.
+One of the most useful features of the task system is automatic latency measurement. The tracer tracks
+528
+the time between when a task is created and when End is called. You get latency measurements for every
+type of task, with no extra work needed in your application code. This happens entirely inside the runtime.
+Next, regions give you a more detailed way to annotate your code. They are designed to mark specific time
+intervals inside a single goroutine's execution.
+Unlike tasks, regions must always start and end within the same goroutine. They must also follow strict
+nesting rules: a region started later must end before an earlier region can end. There are two ways to create
+regions, and each serves a different purpose with its own trade-offs:
+trace.WithRegion(ctx, "databaseQuery", func() {
+  result, err := db.Query("SELECT * FROM users")
+  // ... process result
+})
+WithRegion is the simple option. It takes a function, starts the region, runs your function, and ends the
+region when your function returns. This cleanup is automatic and happens even if the function panics.
+Internally, it is similar to:
+// What WithRegion does internally
+id := fromContext(ctx).id
+userRegion(id, regionStartCode, regionType)
+defer userRegion(id, regionEndCode, regionType)
+fn()
+If you need more control, use StartRegion. This lets you decide exactly when the region starts and ends:
+region := trace.StartRegion(ctx, "fileProcessing")
+defer region.End()
+// Your code here
+file, err := os.Open("data.txt")
+if err != nil {
+  return err
+}
+// ... process file
+While WithRegion is easy and safe, it can feel limited for more complex code. It also uses closures, which
+sometimes hold on to variables longer than needed and might affect garbage collection. StartRegion gives
+you more flexibility, but you have to be careful to always call End so the region is finished properly.
+Regions are always linked to whatever task is active in the current context. If there is no active task, they
+are attached to the special background task (ID 0). This setup creates a natural hierarchy: tasks contain
+regions. You get both a high-level view (tasks) and a detailed, internal structure (regions).
+529
+The rule that later regions must end before earlier ones comes from how regions are managed in the
+runtime. The runtime uses a stack for each goroutine, so starting a region pushes it onto the stack, and
+ending a region pops the latest one off.
+Logs are different from tasks and regions. Logs record a point-in-time event and give context during
+execution. They do not track duration, just moments or state information. There are two log functions: Log
+for simple messages, and Logf for formatted messages, much like fmt.Sprintf:
+trace.Log(ctx, "cache", "cache miss for key: " + key)
+trace.Logf(ctx, "performance", "query took %v milliseconds", duration.Milliseconds())
+Logs always include both a category and a message. The category is used for filtering and grouping by
+trace analysis tools. The system expects only a limited number of unique categories, which helps with trace
+performance and memory usage.
+Up to this point, one of the most important aspects of the user annotation system is how it works with Go's
+context package. Every annotation API takes a context.Context parameter, and task information is carried
+through the context with a special context key. This means that the task context moves automatically
+through your application's call stack. Any annotation you make with a derived context is always connected
+to the correct task.
+This integration with context also handles cross-goroutine cases very well. If you pass a context with task
+info into a new goroutine, that goroutine's annotations are linked to the same task. This is very useful for
+tracking work that happens across multiple goroutines, such as in fan-out patterns or producer-consumer
+designs.
+NOTE
+User annotations in Go tracing are very different from microservices tracing tools like
+OpenTelemetry. Go tracing shows connections between your tasks and low-level runtime
+events that OpenTelemetry cannot see. OpenTelemetry is good for showing request flows
+between services, but Go tracing shows you what is happening inside the Go runtime.
+For example, if a database call is slow, Go tracing can tell you if the delay came from a
+syscall block, slow scheduling, or network lag. OpenTelemetry would only report that the
+database call was slow, without showing why.
+To see this all come together, let's build a realistic example using tasks, regions, and logs. We will start with
+the main function and build from there. First, we set up tracing by creating an output file and starting the
+tracer.
+This will record both runtime events and our user annotations:
+func main() {
+  f, err := os.Create("trace.out")
+  if err != nil {
+  log.Fatalf("Failed to create trace file: %v", err)
+  }
+  defer f.Close()
+  if err := trace.Start(f); err != nil {
+530
+  log.Fatalf("Failed to start trace: %v", err)
+  }
+  defer trace.Stop()
+  ctx := context.Background()
+  ctx, rootTask := trace.NewTask(ctx, "rootTask")
+  defer rootTask.End()
+}
+Here we create a root task called rootTask that is the parent for everything else. This gives us a single toplevel operation for the whole program run.
+Let's simulate 10 concurrent requests:
+func main() {
+  ...
+  var wg sync.WaitGroup
+  for i := 0; i < 10; i++ {
+  wg.Add(1)
+  go func(reqID int) {
+  defer wg.Done()
+  handleRequest(ctx, reqID)
+  }(i)
+  time.Sleep(time.Millisecond * 10)
+  }
+  wg.Wait()
+  trace.Stop()
+}
+Each goroutine receives the same context, so they all inherit the root task. The short sleep between
+launches helps us see the requests staggered out in the trace. Next, we simulate a handler function:
+func handleRequest(ctx context.Context, requestID int) {
+  ctx, task := trace.NewTask(ctx, "handleRequest")
+  defer task.End()
+  trace.Log(ctx, "request", fmt.Sprintf("started request %d", requestID))
+}
+Every request creates its own task, which becomes a child of the root task. The log records a message with
+a timestamp for when this request started.
+The next step is validation, which we wrap in a region to measure exactly how long it takes:
+func handleRequest(ctx context.Context, requestID int) {
+  ...
+531
+  trace.WithRegion(ctx, "requestValidation", func() {
+  time.Sleep(time.Millisecond * time.Duration(rand.Intn(5)+1))
+  })
+}
+This runs synchronously and will always appear first in each request's timeline.
+Here's where it gets more interesting. We now fan out to three parallel database queries, but all of them use
+the same context:
+func handleRequest(ctx context.Context, requestID int) {
+  ...
+  var wg sync.WaitGroup
+  results := make(chan string, 3)
+  for i := range 3 {
+  wg.Add(1)
+  go func(queryID int) {
+  defer wg.Done()
+  trace.WithRegion(ctx, fmt.Sprintf("query-%d", queryID), func() {
+  result := dbQuery(ctx, requestID*10+queryID)
+  results <- result
+  trace.Log(ctx, "result", result)
+  })
+  }(i)
+  }
+}
+This setup means all three goroutines will show up in the trace as working on the same request task. Each
+one gets its own region with a name like "query-0", "query-1", or "query-2".
+After the queries, we process the results in a new region:
+func handleRequest(ctx context.Context, requestID int) {
+  ...
+  trace.WithRegion(ctx, "processResults", func() {
+  for result := range results {
+  time.Sleep(time.Millisecond * time.Duration(rand.Intn(5)+1))
+  trace.Logf(ctx, "processing", "processed %s", result)
+  }
+  })
+}
+The logs here show exactly which results are being processed and at what time. Now let's look at the
+database function:
+532
+func dbQuery(ctx context.Context, id int) string {
+  defer trace.StartRegion(ctx, "dbQuery").End()
+  trace.Log(ctx, "query", fmt.Sprintf("id=%d", id))
+  trace.WithRegion(ctx, "dbConnect", func() {
+  time.Sleep(time.Millisecond * time.Duration(rand.Intn(300)))
+  })
+  time.Sleep(time.Millisecond * time.Duration(rand.Intn(200)))
+  return fmt.Sprintf("result-%d", id)
+}
+The whole database call is wrapped in a "dbQuery" region using a defer to ensure it always ends. Right
+away, we log the ID we are querying. Inside, there is a nested "dbConnect" region for connecting, followed
+by extra time for the actual query work.
+This setup gives you a detailed view of all the database timing. When you run this and open the trace with
+go tool trace trace.out
+you will see a clear hierarchy in the viewer. You can drill down from the root task, to individual requests, to
+each database operation. Logs provide helpful context at every level.
+To see the full hierarchy, open go tool trace trace.out and go to the "User-defined tasks and regions"
+section:
+Illustration 244. Drill down into trace regions for bottleneck analysis
+Click on /usertasks (the User-defined tasks link) to see a summary table of all task types in your trace. In
+this example, you will see entries for "rootTask" and "handleRequest" tasks.
+Each row in the summary shows the task type, how many tasks of that type were created, and a distribution
+of durations:
+533
+Illustration 245. Task summary showing count and duration buckets
+Keep in mind, these timing statistics only include tasks that have finished. The rootTask usually does not
+show a distribution because it is probably still running when the trace ends. For the handleRequest tasks,
+you can see all 10 requests we created. The duration buckets break down as follows:
+• 158.489319ms: 1 task finished between 158.489319ms and 251.188643ms
+• 251.188643ms: 8 tasks finished between 251.188643ms and 398.10717ms
+• 398.10717ms: 1 task finished between 398.10717ms and 630.957344ms
+• 630.957344ms: This bucket shows up even though there are no tasks in it. The Go trace system uses a
+logarithmic histogram, so every bucket from minimum to maximum is shown, even if some have zero
+tasks.
+This means most tasks (8 out of 10) took between 251ms and 398ms to complete. This matches what we
+would expect, given the random sleep ranges in our example code.
+To see the exact sequence of events for a specific task duration, click on the time range or the count in the
+summary. This takes you to the /usertask?type=handleRequest view, which shows a chronological
+breakdown for each individual handleRequest task:
+534
+Illustration 246. Detailed event timeline for handleRequest user task.
+For every event, the trace viewer shows the absolute timestamp since the start of the trace, the time
+elapsed since the previous event in that task, and the goroutine where the event happened. For example,
+starting at timestamp 0.043904384s, Task 6 began with the following sequence:
+• Initial setup (first 5ms): The task starts, logs "started request 4", and runs the requestValidation
+region, which takes about 5.6ms. You can see this region start at 0.043908672 and end at
+0.049555904.
+• Fan-out to parallel queries: After validation, it immediately starts the processResults region and then
+launches the three database query goroutines. All of them begin almost at the same time:
+◦ query-0 starts at 0.049566592 on goroutine 8
+◦ query-1 starts at 0.049569088 on goroutine 9
+◦ query-2 starts at 0.049580096 on goroutine 10
+• The bottleneck: Each query has nested dbQuery and dbConnect regions. Look at the dbConnect
+durations:
+◦ query-2's dbConnect (goroutine 10): starts at 0.049581184, ends at 0.082761024 = 33ms
+◦ query-0's dbConnect (goroutine 8): starts at 0.049568448, ends at 0.136847168 = 87ms
+◦ query-1's dbConnect (goroutine 9): starts at 0.049570496, ends at 0.151650752 = 102ms
+This shows that the random sleep in our dbConnect region (from 0 to 300ms) is causing the main
+bottleneck. query-1 took the longest at 102ms for just the connection phase. This determined the overall
+request latency, since all queries must finish before the request can complete.
+If you prefer a visual representation instead of the text or tabular view, you can click on Task 6 (goroutine
+view). This view shows the same information but in a much more visual format:
+535
+Illustration 247. Visual trace of handleRequest task timeline
+There is also a region summary view, which is similar to /usertask?type=handleRequest and offers the
+same features. It shows each region instance along with a distribution of durations:
+Illustration 248. Region summary: dbConnect and dbQuery durations
+The only difference is in the detail view for each region. While it does not display logs, it does show a
+breakdown similar to what we saw in the goroutine analysis view earlier:
+536
+Illustration 249. Detailed breakdown of dbConnect region timing
+This kind of visual analysis is really valuable for learning Go. You can actually see how goroutines,
+channels, and the scheduler interact. For example, you can see how go func() creates new goroutines and
+when they yield to others.
+It is important to keep performance in mind when using user annotations. The tracing system is built to be
+lightweight when tracing is turned off, but it still allocates task objects just in case tracing gets turned on
+during the task's lifetime.
+Under the Hood
+Understanding how trace works is not required, so feel free to skip this section if you want.
+Buffering & Generations (full/empty queues)
+At the center of Go's tracing system is a global trace object that manages everything. This central piece
+coordinates the whole tracing operation:
+ 1 var trace struct {
+ 2 ...
+ 3
+ 4 reading *traceBuf
+ 5 empty *traceBuf
+ 6 full [2]traceBufQueue
+ 7 workAvailable atomic.Bool
+ 8
+ 9 readerGen atomic.Uintptr // the generation the reader is currently reading
+  for
+10 flushedGen atomic.Uintptr // the last completed generation
+11 ...
+12 gen atomic.Uintptr // the current generation
+13 }
+14
+15 type traceBufQueue struct {
+537
+16 head, tail *traceBuf
+17 }
+During program execution, the tracer collects a lot of information—like which goroutines are running, when
+they block, and when garbage collection occurs. All of this information is recorded as events in memory.
+These events need a place to go, and that place is called the trace buffer (tracebuf).
+These buffers are global, meaning they are shared across the system and not tied to a single goroutine or
+thread. However, writing directly to these shared buffers would create too much contention because many
+goroutines could try to write at once. Instead, each thread keeps two private 64 KB trace buffers:
+type mTraceState struct {
+  seqlock atomic.Uintptr
+  buf [2]*traceBuf // Two buffers for alternating generations
+  link *m
+}
+type traceBuf struct {
+  _ sys.NotInHeap
+  traceBufHeader
+  arr [64<<10 - unsafe.Sizeof(traceBufHeader{})]byte
+}
+So, when a goroutine running on a thread needs to record a trace event, it writes into its own thread's active
+buffer for the current generation. Since the buffer is private to the thread, and a thread only runs one
+goroutine at a time, there is no need for extra locking. The global buffers in trace are used when data from
+these local buffers is ready to be read.
+Why are there two buffers ([2]*traceBuf) per thread? The tracing system is organized into generations.
+Each generation keeps its trace data separate.
+When many threads write events at the same time, but only one goroutine reads them later, they need to
+avoid getting in each other's way. With only one buffer per thread, there are two main problems:
+• If a thread is still writing, the reader cannot safely read the buffer.
+• If there is no clear stopping point for writing, memory cannot be safely reused, and memory use could
+grow forever.
+Generations solve both issues.
+538
+Illustration 250. Buffers ensure threads and readers don't clash
+Threads write to their buffer for the current generation. After some time, usually about a second, Go's tracer
+ends that generation (for example, generation 5). All threads are told to stop writing to the generation 5
+buffer (buf[1]) and switch to a new buffer for generation 6 (buf[0]). Now, the reader can safely read the
+data from generation 5, knowing that no more events are being written there. When reading is done, the
+memory for that generation can be used again.
+This setup gives us three major benefits:
+1. Writers and the reader never access the same data at the same time, so everything stays safe.
+2. We can always tell when it's safe to reuse or free memory.
+3. The reader always gets a complete and finished set of trace events for each generation, making
+processing simple.
+Advancing to the next generation happens regularly—usually once every second. This time window is long
+enough to collect useful trace data, but short enough that no single generation becomes too large. The
+process of moving to the next generation is handled in a background goroutine, so it does not block or slow
+down your main program.
+NOTE
+Other optimizations, like reusing string tables, stack tables, and type tables, also benefit
+from generations, but we will not cover those here.
+Trace Locker
+After a short period, the runtime decides it is time to advance to a new generation. This step is called
+"generation advancement". Before switching generations, the runtime has to be sure that no thread is still
+writing to the old generation's buffer. Once the switch happens, the old buffers might get flushed,
+processed, or freed. To make sure this is safe, the runtime uses a system called the trace locker.
+Each thread has a sequence lock (seqlock), which is simply an atomic counter:
+type m struct {
+  ...
+  trace mTraceState
+}
+539
+type mTraceState struct {
+  seqlock atomic.Uintptr // seqlock indicates this thread is writing to a trace
+buffer.
+  buf [2]*traceBuf // Per-thread traceBuf for writing. Indexed by trace.gen%2.
+  link *m // Snapshot of alllink or freelink.
+}
+When a thread wants to write trace events, it calls traceAcquire(), which increases its sequence lock
+(seqlock) by 1.
+seq := mp.trace.seqlock.Add(1)
+If the sequence lock is an odd number, it means "this thread is writing trace events now." When the thread
+finishes, it calls traceRelease(), which adds 1 again, making the sequence lock even. So, an even
+sequence lock means "this thread is not writing right now."
+When it's time to move to a new generation, the tracer increases the generation number, for example to 5,
+and all threads with a new trace locker start writing to the generation 5 buffer. The tracer can then safely
+process or reuse the generation 4 buffers for all threads, but only if the sequence lock is even.
+Why? Because there could be a race where a thread is still writing to the generation 4 buffer (buf[0]) when
+the tracer switches to generation 5:
+Illustration 251. Thread B hasn't finished with previous generation.
+The next time thread B grabs the trace locker, it will write to the generation 5 buffer (buf[1]). The tracer
+checks the sequence lock of each thread, and if the sequence lock is even, it is safe to say that the thread
+has switched to the new generation.
+If any thread has an odd sequence lock, that means it is still writing trace data.
+In that case, the tracer waits until the thread is done:
+540
+for mToFlush != nil {
+  prev := &mToFlush
+  for mp := *prev; mp != nil; {
+  if mp.trace.seqlock.Load()%2 != 0 {
+  // The thread is writing. Come back to it later.
+  ...
+  continue
+  }
+  ...
+  }
+  // Yield only if we're going around the loop again.
+  if mToFlush != nil {
+  osyield()
+  }
+}
+The thread might be writing to the generation 5 buffer (buf[1]) or the generation 6 buffer (buf[0]), and that
+is fine. The tracer skips over it, processes other threads, and comes back later to check the sequence lock
+again.
+NOTE
+In theory, the tracer could do a generation-aware check. It could flush the generation 5
+buffer if it knows the thread is already working with the generation 6 buffer. However, this
+would need extra state. It would require reading the writer's current generation (which
+means another atomic read and a memory fence to keep everything in sync).
+If the thread is not writing, then the tracer flushes its trace buffer to the global container (trace.full). A
+thread that has had its buffer flushed does not need to wait for other threads. It can immediately keep
+collecting trace data in the new generation's buffer.
+The key part of this system is the traceLocker structure. It gives exclusive access to a thread's trace
+resources when emitting events:
+• Any part of the runtime that wants to write a trace event must first acquire a locker (traceAcquire()),
+which makes the sequence lock odd.
+• When done, it releases the lock (traceRelease()), which makes the sequence lock even again.
+Trace Writer
+The trace writer acts as the link between the trace locker and the buffer management system. It lets you
+write trace events while taking care of all the buffer allocation, flushing, and synchronization details:
+type traceWriter struct {
+  traceLocker
+  *traceBuf
+}
+541
+The trace writer uses a fluent API pattern, where every method returns a new trace writer instance. This lets
+you chain methods together. For example, to flush and end a trace writer, you can do:
+statusWriter.flush().end()
+Now that you have seen all the main parts of the tracer, it is time to see how they work together.
+Event Pipeline
+When tracing starts using StartTrace(), the system goes through several initialization steps to reset its
+state and record the initial runtime state. However, this initialization requires stopping the world (STW).
+STW Bootstrap
+Once tracing is enabled, goroutines that emit events will automatically write status events for themselves
+and also for other goroutines they interact with, if those have not been traced yet. To understand this
+better, let's see how a goroutine writes status events:
+trace := traceAcquire()
+... PROBLEM WINDOW
+casgstatus(gp, _Gwaiting, _Grunnable)
+if trace.ok() {
+  trace.GoUnpark(gp, 2)
+  traceRelease(trace)
+}
+This code should look familiar after reading about the trace locker. To recap: when a goroutine wants to
+emit trace events, it first acquires a trace locker. If tracing is enabled, traceAcquire() returns a valid trace
+locker—think of it as permission to emit events.
+If tracing is not enabled, traceAcquire() returns an invalid trace locker. The goroutine then performs its
+state change and, if needed, emits the trace event (like GoUnpark above). After emitting, it must call
+traceRelease() to clean up the tracing state.
+A risky scenario appears when a goroutine calls traceAcquire() before tracing is enabled, and then tracing
+is enabled while that goroutine is still running. The sequence goes like this:
+1. Goroutine A calls traceAcquire() while tracing is still off and gets an invalid locker.
+2. Trace initialization begins and tracing is turned on.
+3. Goroutine B calls traceAcquire() and gets a valid trace locker because tracing is now on.
+4. Goroutine B reads goroutine C's status, sees it as waiting, and emits a waiting event for goroutine C.
+5. Goroutine A changes goroutine C's status from waiting to runnable. But since it had an invalid locker
+from before, it does not emit the new state for C.
+Now the trace is inconsistent: it shows goroutine C as waiting, but it is actually runnable. Later events will
+542
+expect that state change, but the transition was never recorded.
+Stopping the world removes this problem. When the world restarts, every goroutine's next call to
+traceAcquire() will return a valid trace locker. No goroutine will be left holding a stale, invalid locker.
+While the world is stopped, the runtime also records an initial, explicit status event for every goroutine and
+every P (processor):
+func StartTrace() error {
+  ...
+  stw := stopTheWorld(stwStartTrace)
+  ...
+  // Make sure a ProcStatus is emitted for every P, while we're here.
+  for _, pp := range allp {
+  tl.writer().writeProcStatusForP(pp, pp == tl.mp.p.ptr()).end()
+  }
+  ...
+  startTheWorld(stw)
+}
+Figure 140. StartTrace STW (src/runtime/trace.go)
+This way, the trace has a clear baseline for all goroutines and processors, even if nothing happens
+immediately after tracing starts.
+Event Writing (proc, goroutine, STW, GC, user)
+The execution tracer acquires a trace locker at many important points throughout the Go runtime to
+capture execution events. Let's quickly walk through some of the key types of events.
+Processor events track the lifecycle and state changes of Go's logical processors (Ps), which are the
+execution contexts for running goroutines:
+const (
+  // Procs.
+  traceEvProcsChange // current value of GOMAXPROCS [timestamp, GOMAXPROCS, stack
+ID]
+  traceEvProcStart // start of P [timestamp, P ID, P seq]
+  traceEvProcStop // stop of P [timestamp]
+  traceEvProcSteal // P was stolen [timestamp, P ID, P seq, M ID]
+  traceEvProcStatus // P status at the start of a generation [timestamp, P ID,
+status]
+)
+Goroutine lifecycle events provide a full picture of goroutine behavior, covering creation, execution,
+blocking, unblocking, and destruction:
+543
+const (
+  // Goroutines.
+  traceEvGoCreate // goroutine creation [timestamp, new goroutine ID, new
+stack ID, stack ID]
+  traceEvGoCreateSyscall // goroutine appears in syscall (cgo callback)
+[timestamp, new goroutine ID]
+  traceEvGoStart // goroutine starts running [timestamp, goroutine ID,
+goroutine seq]
+  traceEvGoDestroy // goroutine ends [timestamp]
+  traceEvGoDestroySyscall // goroutine ends in syscall (cgo callback) [timestamp]
+  traceEvGoStop // goroutine yields its time, but is runnable
+[timestamp, reason, stack ID]
+  traceEvGoBlock // goroutine blocks [timestamp, reason, stack ID]
+  traceEvGoUnblock // goroutine is unblocked [timestamp, goroutine ID,
+goroutine seq, stack ID]
+  traceEvGoSyscallBegin // syscall enter [timestamp, P seq, stack ID]
+  traceEvGoSyscallEnd // syscall exit [timestamp]
+  traceEvGoSyscallEndBlocked // syscall exit and it blocked at some point
+[timestamp]
+  traceEvGoStatus // goroutine status at the start of a generation
+[timestamp, goroutine ID, M ID, status]
+)
+Next, STW events capture global runtime pauses that affect all goroutines. These events mark the start and
+end of stop-the-world (STW) phases, recording when all goroutines are paused and when they are allowed
+to resume. The "kind" parameter shows the reason for the STW pause.
+const (
+  // STW.
+  traceEvSTWBegin // STW start [timestamp, kind]
+  traceEvSTWEnd // STW done [timestamp]
+)
+GC events track all phases of garbage collection, from high-level GC cycles to detailed sweep and mark
+assist operations. Heap allocation and heap goal events track memory usage changes that drive GC
+decisions. Mark assist events show when user goroutines help with GC marking work:
+const (
+  // GC events.
+  traceEvGCActive // GC active [timestamp, seq]
+  traceEvGCBegin // GC start [timestamp, seq, stack ID]
+  traceEvGCEnd // GC done [timestamp, seq]
+  traceEvGCSweepActive // GC sweep active [timestamp, P ID]
+  traceEvGCSweepBegin // GC sweep start [timestamp, stack ID]
+  traceEvGCSweepEnd // GC sweep done [timestamp, swept bytes, reclaimed
+bytes]
+  traceEvGCMarkAssistActive // GC mark assist active [timestamp, goroutine ID]
+544
+  traceEvGCMarkAssistBegin // GC mark assist start [timestamp, stack ID]
+  traceEvGCMarkAssistEnd // GC mark assist done [timestamp]
+  traceEvHeapAlloc // gcController.heapLive change [timestamp, heap alloc
+in bytes]
+  traceEvHeapGoal // gcController.heapGoal() change [timestamp, heap goal
+in bytes]
+)
+Annotation events capture user-defined trace information that developers can add for debugging and
+profiling. These match the user-facing trace API and let you add custom instrumentation to your code.
+Labels add metadata to goroutines, tasks provide hierarchical grouping for related work, regions mark
+spans of interest, and logs record key-value data:
+const (
+  // Annotations.
+  traceEvGoLabel // apply string label to current running goroutine
+[timestamp, label string ID]
+  traceEvUserTaskBegin // trace.NewTask [timestamp, internal task ID, internal
+parent task ID, name string ID, stack ID]
+  traceEvUserTaskEnd // end of a task [timestamp, internal task ID, stack ID]
+  traceEvUserRegionBegin // trace.{Start,With}Region [timestamp, internal task ID,
+name string ID, stack ID]
+  traceEvUserRegionEnd // trace.{End,With}Region [timestamp, internal task ID,
+name string ID, stack ID]
+  traceEvUserLog // trace.Log [timestamp, internal task ID, key string ID,
+stack, value string ID]
+)
+Each event is represented by an int constant. The comments next to each constant describe what the
+event means and what arguments it includes. These events are collected throughout the runtime using the
+traceAcquire() and traceRelease() pattern. For example, GC events are emitted during garbage collection
+as in this snippet:
+trace := traceAcquire()
+if trace.ok() {
+  trace.GCStart()
+  traceRelease(trace)
+}
+When a goroutine acquires the trace locker, it prevents preemption by binding itself to its thread (M). Any
+stop-the-world pause by the garbage collector or other runtime operations will be delayed until the trace
+locker is released. The goroutine then acquires the sequence lock (seqlock) on its thread's trace state by
+incrementing it to an odd value. This marks that the thread is actively writing trace events.
+The trace locker now holds two things: the thread (M) and the current generation number:
+545
+Illustration 252. Trace locker binds goroutine to thread and generation
+If the tracer is not enabled (for example, the current generation is 0 or the global trace.enabled is false), it
+returns an invalid trace locker with generation set to 0:
+// ok returns true if the traceLocker is valid (i.e. tracing is enabled).
+//
+// nosplit because it's called on the syscall path when stack movement is forbidden.
+//
+//go:nosplit
+func (tl traceLocker) ok() bool {
+  return tl.gen != 0
+}
+Figure 141. traceLocker.ok() (src/runtime/traceruntime.go)
+When a goroutine emits an event, it creates a trace writer:
+func (tl traceLocker) writer() traceWriter {
+  return traceWriter{traceLocker: tl, traceBuf: tl.mp.trace.buf[tl.gen%2]}
+}
+Illustration 253. Writer connects trace locker to correct buffer
+For example, if we are on generation 1, tl.gen%2 equals 1, so tl.mp.trace.buf[1] points to the second
+buffer. The trace writer now acts as the bridge that holds both the locking logic and the actual buffer where
+events will be written.
+The trace system follows an important rule: every active scheduling resource (goroutines and processors)
+must have their status explicitly recorded at least once in each generation. This status event acts as the
+baseline state for the resource, so all later events in that generation can be interpreted correctly. If a
+goroutine participates in any traced event during a generation, the tracer automatically emits a status event
+for it if none has been recorded yet:
+func (tl traceLocker) eventWriter(goStatus traceGoStatus, procStatus traceProcStatus)
+traceEventWriter {
+546
+  // Get the underlying trace writer that will write to the trace buffer
+  w := tl.writer()
+  // Check if we need to emit a processor status event
+  // Write a ProcStatus event to establish the processor's baseline state
+  if pp := tl.mp.p.ptr(); pp != nil && !pp.trace.statusWasTraced(tl.gen) && pp.
+trace.acquireStatus(tl.gen) {
+  w = w.writeProcStatus(uint64(pp.id), procStatus, pp.trace.inSweep)
+  }
+  // Check if we need to emit a goroutine status event
+  // Write a GoStatus event to establish the goroutine's baseline state
+  if gp := tl.mp.curg; gp != nil && !gp.trace.statusWasTraced(tl.gen) && gp.trace
+.acquireStatus(tl.gen) {
+  w = w.writeGoStatus(uint64(gp.goid), int64(tl.mp.procid), goStatus, gp
+.inMarkAssist, 0 /* no stack */)
+  }
+  return traceEventWriter{w}
+}
+However, the trace writer does not write the event immediately. It first checks that the buffer has enough
+free space for the event:
+// ensure makes sure that at least maxSize bytes are available to write.
+//
+// Returns whether the buffer was flushed.
+func (w traceWriter) ensure(maxSize int) (traceWriter, bool) {
+  refill := w.traceBuf == nil || !w.available(maxSize)
+  if refill {
+  w = w.refill(traceNoExperiment)
+  }
+  return w, refill
+}
+If the buffer does not have enough space, the writer will flush the current buffer to the trace system's full
+buffer queue, which holds all completed and immutable buffers. It then refills itself with a new empty
+buffer. The full process of flushing and getting a new buffer is handled in the refill method.
+Let's first look at how a buffer is flushed to the global trace system:
+547
+Illustration 254. Buffers are flushed into full queue
+The trace.full structure is made of two linked lists—one for each generation. Each list uses a simple
+queue with head and tail pointers. When a buffer is finished (flushed), it is added to the end of the queue
+for its generation. This is done by updating the current tail's link and moving the tail pointer to the new
+buffer.
+When the trace reader needs to read, it removes buffers from the front of the queue by following the head
+pointer and moving it along the link chain.
+That covers flushing, but where does the new buffer come from for the thread's trace writer?
+There are two ways to refill a buffer. The writer can either reuse a buffer from the tracer's empty list, or, if
+there are no empty buffers available, allocate a new 64 KB buffer from the operating system:
+Illustration 255. Trace writer requests buffer from empty list
+The empty list is another linked list, separate from the full list. It holds buffers that are no longer in
+use—buffers that were previously full, have been read completely by the trace reader, and then returned for
+reuse.
+The reader plays a major role in this system by returning buffers to the empty list after they are finished:
+548
+Illustration 256. Full and empty buffers coordinate tracing
+Here is the source code for the refill function:
+func (w traceWriter) refill(exp traceExperiment) traceWriter {
+  systemstack(func() {
+  lock(&trace.lock)
+  if w.traceBuf != nil {
+  traceBufFlush(w.traceBuf, w.gen) // flush
+  }
+  // refill
+  if trace.empty != nil {
+  w.traceBuf = trace.empty
+  trace.empty = w.traceBuf.link
+  unlock(&trace.lock)
+  } else {
+  unlock(&trace.lock)
+  w.traceBuf = (*traceBuf)(sysAlloc(unsafe.Sizeof(traceBuf{}), &memstats
+.other_sys))
+  if w.traceBuf == nil {
+  throw("trace: out of memory")
+  }
+  }
+  })
+  ...
+}
+Figure 142. refill (src/runtime/tracebuf.go)
+Each event is written along with its "timestamp delta". Each trace buffer keeps a lastTime field to track the
+timestamp of the most recent event written to that buffer. When writing a new event, the system calculates
+the difference between the current time and lastTime, and stores only this delta in the trace data:
+// traceEventWrite is the part of traceEvent that actually writes the event.
+func (w traceWriter) event(ev traceEv, args ...traceArg) traceWriter {
+  // Make sure we have room.
+  w, _ = w.ensure(1 + (len(args)+1)*traceBytesPerNumber)
+  // Compute the timestamp diff that we'll put in the trace.
+  ts := traceClockNow()
+  if ts <= w.traceBuf.lastTime {
+  ts = w.traceBuf.lastTime + 1
+549
+  }
+  tsDiff := uint64(ts - w.traceBuf.lastTime)
+  w.traceBuf.lastTime = ts
+  // Write out event.
+  w.byte(byte(ev))
+  w.varint(tsDiff)
+  for _, arg := range args {
+  w.varint(uint64(arg))
+  }
+  return w
+}
+This delta-based method reduces the space required to store timestamps, since most deltas are much
+smaller than full timestamps. Smaller numbers are more efficient to encode using variable-length
+encoding, so this approach saves significant space in the trace data.
+Each trace event in Go's execution trace is stored in a binary and compact format that follows a specific
+layout:
+[event type][timestamp delta][arg0][arg1][arg2]...
+After all events are written, the goroutine calls traceWriter.end() to complete the operation. This method
+updates the trace buffer pointer in the M's trace state at mp.trace.buf[gen%2], making sure any changes
+(like acquiring a new buffer during writing) are saved for future writes by this thread:
+Illustration 257. Trace writer updates buffer reference after writing
+Finally, the goroutine releases the trace locker, increments the sequence lock again (making it even), and
+also releases the M so that preemption can happen.
+This is how the trace mechanism works with careful design:
+• Each thread writes its trace events into its own private buffer, so there is no contention over shared
+resources or unnecessary waiting.
+• The runtime occasionally creates a new generation, making sure all the old data is sealed and safe to
+read by using the sequence lock, while new events are written into a fresh buffer.
+• Delta-based timestamp encoding reduces the space needed to store timestamps, making the trace
+550
+more efficient.
+All of these are practical design choices and can be applied to other high performance applications.

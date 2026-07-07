@@ -1,0 +1,485 @@
+7. Profile-Guided Optimization (PGO)
+Profile-Guided Optimization (PGO), sometimes called Feedback-Directed Optimization (FDO), is a compiler
+optimization technique. It uses real data from running your application to help the compiler make better
+decisions the next time it builds your code.
+With PGO in Go, the process is a loop: you build and run your app under real conditions and collect CPU
+profiles. These profiles show which parts of your code run most often (called "hot" paths) and how often
+functions are called. You then give these profiles back to the Go compiler for the next build. The compiler
+uses this feedback to make smarter choices and tries to build a faster program:
+Illustration 258. Profile-guided optimization loop in Go compilation
+PGO was first added to Go in version 1.20, released in February 2023. The initial work started in September
+2022, with a commit by Raj Barik from Uber (commit 99862cd57d) [g9986]. This made it possible for the Go
+compiler to use profile-guided inlining.
+The first version of PGO focused on inlining, meaning the compiler uses real runtime data to decide which
+functions to inline instead of relying solely on rules or guesses. In later versions, such as Go 1.21 and Go
+1.22, PGO added support for devirtualization. This optimization allows the compiler to turn certain indirect
+calls (such as calls through interfaces or function values) into direct calls if the profile shows that a
+specific concrete type is used most of the time. This can reduce CPU usage, and many programs have
+seen CPU time decrease by 2 to 14% after using PGO in Go 1.21 or 1.22.
+NOTE
+PGO also makes small improvements to SSA code generation, mostly with loop
+optimizations and code layout. These details give a little extra performance, but they do not
+change how your code works in a major way. We focus on the main PGO features, inlining
+and devirtualization, since these have the biggest impact and are most useful.
+Using PGO in Practice
+Let's look at how to use PGO with a simple example. We will use the same code as in the CPU profiling
+section:
+func hot() {
+551
+  x := 0
+  for i := range 100000000 {
+  x += i
+  }
+  fmt.Sprintln("prevent inlining")
+  fmt.Sprintln("prevent inlining")
+}
+func cold() {
+  time.Sleep(5 * time.Millisecond)
+  fmt.Sprintln("prevent inlining")
+}
+func indirectHot() {
+  hot()
+  fmt.Sprintln("prevent inlining")
+}
+func main() {
+  f, err := os.Create("cpu.prof")
+  if err != nil {
+  panic(err)
+  }
+  defer f.Close()
+  if err := pprof.StartCPUProfile(f); err != nil {
+  panic(err)
+  }
+  defer pprof.StopCPUProfile()
+  indirectHot()
+  for range 150 {
+  hot()
+  cold()
+  }
+}
+In this example, we add more "useless" fmt.Sprintln calls to make sure the compiler does not inline these
+functions by default. This works because calling two functions inside is enough to stop the inliner due to
+the cost. Also, we moved indirectHot outside the loop.
+The first step is to build your Go program the usual way (without PGO) and run it in a real environment. This
+should be as close to production as possible:
+$ go build -o main main.go
+$ ./main
+Next, use Go's profiling tools to find out where your program uses the most CPU while it is running real
+552
+workloads. In our example, the program automatically saves the CPU profile data to a file called cpu.prof,
+so you do not need to do anything extra. Here is how to view the CPU profile graph:
+$ go tool pprof -http=:8080 main cpu.prof
+Illustration 259. pprof output shows the main execution path
+For the next build, turn on PGO by giving the collected profile to the Go compiler. Go makes this easy: if you
+rename your profile to default.pgo and put it in your main module's directory, running go build will
+automatically find the profile and use PGO optimizations:
+$ mv cpu.prof default.pgo
+$ go build -o main main.go
+This automatic PGO feature makes it simple to add PGO to your usual build process. You can commit a
+default.pgo file into your repository alongside your code, and all future builds will automatically benefit
+from the performance improvements.
+NOTE
+With Go 1.21 and newer, auto-detection is always on. In Go 1.20, however, you had to
+enable PGO manually.
+If you want more control, use the -pgo flag with the build or test commands:
+# Build the binary with a specific profile file.
+$ go build -pgo=cpu.pprof -o main main.go
+553
+# Auto-detects a default.pgo file in the package if present.
+$ go build -pgo=auto -o main main.go
+# Turn off PGO.
+$ go build -pgo=off -o main main.go
+This explicit mode is helpful when you have several profiles for different scenarios, or when your profiles
+are in non-standard places, or when you are trying different optimization strategies. The new binary should
+run faster under the same workload because the compiler will inline more code.
+Let's run the optimized binary and check the profile:
+Illustration 260. Profiling shows most time spent in inlined code
+The arrow from main to main.hot is marked as inlined because main.hot is a hot path. However, the arrow
+from main.indirectHot to main.hot is not marked as inlined. This is the power of PGO: it considers not only
+hot functions but also hot call paths. As your application changes or receives new workloads, you can
+continue collecting new profiles and rebuild with PGO. This creates a cycle: profile, optimize, deploy, and
+repeat.
+Keep in mind that the result is not always the same. Sometimes, the call to hot inside indirectHot may
+also be inlined. This depends on factors we will discuss in the next section.
+PGO Mechanics
+You already know how CPU profiling works from the profiling section. The profiler samples the program's
+execution at regular time intervals, for example, every 10 milliseconds, and records the call stack at each
+point.
+554
+Over time, this builds up a statistical view of which parts of your program are "hot." A "hot" area is one that
+shows up often in the samples, meaning the program spends a lot of time there.
+The stack traces show the full context—not just which function is running, but the whole chain of calls that
+led to it. So the profiler does not just say hot() is hot. It can see that hot() is hot when called from main,
+but not when called from indirectHot.
+NOTE
+Here is a detail to keep in mind: a function that runs very quickly but is called a lot may not
+show up as hot, while a function that runs slowly and takes up a lot of CPU time will appear
+more in the samples.
+Build Process (what the toolchain does)
+Let's see what happens during the build process when you use PGO. We use the same method as in
+Chapter 5 to look inside the build steps.
+$ go build -pgo=default.pgo -n main.go
+You can skip -pgo=default.pgo because Go will find this file in the application's root directory
+automatically. Here, we make it explicit just for the example.
+The first step in the build is to create the artifact directory:
+$ mkdir -p $WORK/b007/
+A quick reminder: $WORK/b007/ is just a directory the Go build system makes for the current build action.
+The name b007 is a unique ID for that action, like b001, b002, b007, and so on. In this case, b007 is the build
+action for PGO preprocessing. The number does not matter, it just means it is the seventh action in this
+build.
+So, Go creates a dedicated directory for PGO preprocessing. Next, it runs the preprofile tool:
+$ /tools/preprofile -o $WORK/b007/pgo.preprofile -i ~/theanatomyofgo/default.pgo
+What is the preprofile tool, and why do we need it?
+The PGO system can use two main types of profile files. The first is the standard pprof format, which is
+Go's built-in profiling format. This format contains extensive information, including stack traces, sample
+counts, timing data, and additional metadata. In our example, we are using this standard pprof format.
+The second format is a custom serialized intermediate representation created specifically for PGO
+workflows. It uses a simple text-based structure. The file begins with the header GO PREPROFILE V1,
+followed by a list of caller names, callee names, and information about call sites with their associated
+weights:
+GO PREPROFILE V1
+555
+caller_name
+callee_name
+<call site offset> <call edge weight>
+...
+If you use the first format (the standard pprof), the Go build system will automatically convert it to this
+second format with the preprofile tool.
+You can also run this tool yourself to do the conversion:
+$ go tool preprofile -i default.pgo -o pgo.preprofile
+Here is what the pgo.preprofile file looks like in our example:
+GO PREPROFILE V1
+main.main
+main.hot
+14 293
+main.hot
+runtime.asyncPreempt
+2 9
+runtime.wakeNetpoll
+runtime.kevent
+7 2
+main.indirectHot
+main.hot
+1 1
+runtime.semasleep
+runtime.pthread_cond_wait
+32 1
+NOTE
+To keep things simple, we do not focus on most runtime functions that show up in the call
+graph, such as runtime.wakeNetpoll or runtime.semasleep. We make an exception for
+runtime.asyncPreempt, since it can affect the user code call path from main.main.
+The profile format always starts with the header GO PREPROFILE V1. After that, the file is organized in
+groups of three lines: the caller function name, the callee function name, and then two numbers. The
+numbers show the call site offset and the call edge weight. Entries are sorted by weight, with the highest
+weights at the top. This is why main.main -> main.hot is first, with a weight of 293.
+To understand what this weight means, let's look back at the CPU profile graph before optimization:
+556
+Illustration 261. pprof output shows the dominant execution path
+The call path from main.main to main.hot had 300 samples when profiling ran. This means there were 300
+stack traces showing main.main as the caller and main.hot as the callee. Out of those, 293 samples ended
+with main.hot at the bottom of the stack. The other 7 samples ended with runtime.asyncPreempt as the
+last function on the stack.
+The preprocessing step happens only once per build, even though the profile will be used by many different
+package compilations. The Go build system saves the preprocessed profile:
+$ cp $WORK/b007/pgo.preprofile /gobuild/8f/8f75b55a6905032fe8125e6858df1d85edd5ea636685e288d1b0c7b68bfba807-d # internal
+If you build again later, the system uses this long-named preprofile file instead of running the preprofile
+tool again.
+After preprocessing, every compile command in the build now uses the same preprocessed profile:
+$ /tool/compile -o $WORK/b030/_pkg_.a ... -goversion go1.23.9 -pgoprofile=
+$WORK/b007/pgo.preprofile ... -pack /go/src/internal/race/doc.go
+/go/src/internal/race/norace.go
+$ /tool/compile -o $WORK/b009/_pkg_.a ... -goversion go1.23.9 -pgoprofile=
+$WORK/b007/pgo.preprofile ... -pack /go/src/internal/unsafeheader/unsafeheader.go
+This means every package compilation (internal/race, internal/unsafeheader, math, runtime, and so on)
+557
+has access to the same PGO data.
+Preprocess: GO PREPROFILE V1
+Parsing pprof profiles takes a lot of compute power. Without preprocessing, every single call to the
+compiler would need to parse the same profile over and over, building call graphs, finding function names,
+and computing edge weights each time. This is wasteful, especially in large builds where many packages
+use the same profile.
+When the build system looks at your profile and does not see the GO PREPROFILE V1 header, it knows
+preprocessing is needed and will generate the call graphs:
+const serializationHeader = "GO PREPROFILE V1\n"
+func IsSerialized(r *bufio.Reader) (bool, error) {
+  hdr, err := r.Peek(len(serializationHeader))
+  if err == io.EOF {
+  // Empty file.
+  return false, nil
+  } else if err != nil {
+  return false, fmt.Errorf("error reading profile header: %w", err)
+  }
+  return string(hdr) == serializationHeader, nil
+}
+Figure 143. PGO IsSerialized (src/cmd/internal/pgo/deserialize.go)
+The graph-building process works on each sample, and each sample is a captured stack trace. For every
+frame in the stack, it creates a node for the function and an edge for the call between them.
+The system only looks at the last two frames in each stack trace to define the actual call edge. There are a
+few reasons for this:
+• The higher frames in the stack often show initialization code rather than real hot paths in your own
+code. For example, every Go program has the call chain runtime.main -> main.main -> user
+functions. If included, these would dominate the profile, but they are not locations where meaningful
+optimization occurs.
+• The higher frames might be called only once but still appear in many samples. This is because they
+remain on the stack while deeper functions execute.
+So, the system finds caller-callee pairs from the end of the stack traces. For each pair of adjacent frames, it
+creates a call edge that records the caller name, callee name, the call site offset inside the caller, and the
+weight (how many samples saw this call relationship).
+558
+Illustration 262. Profiled call edges between Go functions
+These edges are sorted by weight, highest to lowest. You can see the full output from processing in the
+previous section:
+GO PREPROFILE V1
+main.main
+main.hot
+14 293
+main.hot
+runtime.asyncPreempt
+2 9
+runtime.wakeNetpoll
+runtime.kevent
+7 2
+main.indirectHot
+main.hot
+1 1
+runtime.semasleep
+runtime.pthread_cond_wait
+32 1
+The profile holds call edge information based on the source code from an earlier build. Between builds,
+things can change in the code that affect how the profile data matches up with the current source. Because
+of this, the Go compiler needs a way to match old profile data to the new code. Let's look at how this
+matching works and why it can sometimes break.
+Matching: Call Edges & Offsets
+When you compile with PGO, the compiler has to bring together two different versions of your program. The
+profile is made from old execution data. It includes function names and call site locations from a previous
+build. The current build has the actual IR (Intermediate Representation) of your functions as they are now.
+The job is to match up the profile's call edges to the call sites in the new code.
+To do this, the compiler needs to understand the source code layout. Matching must happen before
+optimizations like inlining or devirtualization are applied:
+559
+Illustration 263. PGO profile matching during IR construction phase
+The most detailed part of this process is matching call sites between the old profile and the new build. The
+system uses a line offset method to help it handle small changes in the code. To identify a call site, the
+matcher uses a composite ID. This ID includes the linker symbol name of the caller (like main.main), the
+linker symbol name of the callee (like main.hot), and the call site offset from the start of the function (for
+example, 43 - 29 = 14).
+Illustration 264. Offset is distance from function's start line
+The Go compiler looks at every function and its body in the current build and creates edges for direct calls
+it finds in the IR. For each call site, it figures out the relative line number (line offset) of the callee from the
+caller and checks the profile to find the weight for that call site. If it cannot find a matching call site in the
+profile, the compiler sets the weight to 0.
+Line numbers are part of the call site identifier. Because of this, changes in line numbers are a big practical
+problem:
+• Line number shifts: Imagine a function with a call site at line offset 5 from the start. If someone adds or
+removes code before that point, the offset might move to 6 or 4. The profile still has the old offset 5, so
+the call site will not match. It will be seen as cold even if it used to be hot.
+• Stale hotness: Suppose a call site was hot because it was inside a loop that ran many times. If the loop
+changes to run only once, the call site is cold now, but the profile may still mark it as hot if the line
+offset stays the same.
+The matching process then creates a graph of call edges between functions and their call sites. However, if
+the call site is an indirect call, the Go compiler does not create any edges for it at this stage. This is
+because the compiler cannot know which concrete function is called at compile time.
+560
+Here is an example with a Worker interface:
+type Worker interface {
+  Do(int) int
+}
+func Process(worker Worker) {
+  worker.Do(1)
+}
+The Process function takes a Worker interface as its argument. At compile time, the Process function does
+not know which concrete type worker will have. Another common example is using a function pointer:
+func Process(do func(int) int) {
+  do(1)
+}
+Again, the compiler does not know which function will be passed in at compile time. All of these indirect
+calls are handled in the second phase of PGO profile mapping.
+The second phase fills in the gaps left by the first phase. It handles edges that cannot be found just by
+looking at the code. In this phase, the build system goes through all edges in the profile data and tries to
+map them to the current code. The CPU profile only contains direct, concrete calls. But at an indirect call
+site, the profile tells the compiler which concrete functions were called during execution.
+Let's look at an example with the Process function:
+var developer = Developer{}
+var tester = Tester{}
+func main() {
+  result := 0
+  var worker Worker
+  for i := range 1000 {
+  if i%200 == 0 {
+  worker = tester
+  } else {
+  worker = developer
+  }
+  result += worker.Do(i)
+  }
+  println(result)
+}
+561
+If you run this function, about 0.5% of the time, worker is a Tester, and 99.5% of the time, it is a Developer.
+So the call site worker.Do(i) will have at most two concrete calls in the CPU profile data.
+Illustration 265. Developer dominates Do call site performance profile
+The Go compiler reads your PGO profile data from top to bottom, sorting the profile edges by weight from
+highest to lowest. It will see the Developer.Do(i) call as the heaviest edge at the worker.Do(i) call site and
+create an edge for it first. When it processes the Tester.Do(i) call at the same call site, it will also create a
+separate edge for it.
+When the profiler sees two different concrete callees at the same indirect call site, it treats them as
+separate keys. This means both will appear in the call graph.
+Hot Callsite Policy & Inline Budget
+To decide which call sites are hot, the Go compiler uses a cumulative distribution method. The idea is to
+select the most performance-critical calls—the ones that together account for 99 percent of all activity in
+your program.
+Here is how it works with a concrete example. Imagine your program has these call sites with these
+weights:
+562
+call site A: 5000 weight
+call site B: 1000 weight
+call site C: 500 weight
+call site D: 40 weight
+call site E: 10 weight
+Total: 6550 weight
+The 99% threshold means we want the smallest set of call sites that add up to at least 99% of 6550, which
+is 6484.5. The preprocessed PGO data is already sorted from highest to lowest weight, so it goes through
+them in order A, B, C, D, E.
+Here is the step-by-step:
+• Step 1 (call site A): Running total is 5000. This is 5000/6550 = 76.3%. That is less than 99%, so keep
+going.
+• Step 2 (call site B): Running total is 6000. That is 6000/6550 = 91.6%. Still less than 99%, so keep going.
+• Step 3 (call site C): Running total is 6500. That is 6500/6550 = 99.2%. Now we pass the 99% mark, so
+we stop.
+So call sites A, B, and C are "hot" and get special inlining treatment. Call sites D and E are "cold" and get
+normal treatment.
+But what is that special treatment?
+The biggest effect of PGO on inlining is the budget change. Normally, the inlining budget is 80 (or 160 with
+some context-aware inlining). For hot call sites, the budget goes up to 2000:
+var inlineHotMaxBudget int32 = 2000
+Figure 144. PGO Inline Hot Max Budget (src/cmd/compile/internal/inline/inl.go)
+Let's look again at how inlining works. A hot call site can be inlined if it passes two checks:
+• Inlinable function: The function itself must be inlinable. This means it does not contain anything that
+blocks inlining, such as defer statements, go statements, or a size that exceeds the budget. For hot
+functions, the budget is now 2000, so more functions will be inlinable.
+• Inlinable call site: Each call site also has its own budget. Hot call sites have their budget increased to
+2000 (unless the function is too large). A function that is inlinable with the 2000 hot budget could still
+have some call sites limited to the normal 80 if those calls are not hot.
+That is why in the earlier example, the hot call site in main.indirectHot was not inlined even though the hot
+function itself was marked as hot.
+Devirtualization (guided by profiles)
+Devirtualization is an optimization that happens when the compiler finds an indirect call and knows ahead
+of time which concrete function will be called at runtime. With normal static analysis, this is hard because
+the compiler cannot always tell which type will be used. The static logic is limited and usually cannot make
+563
+the decision on its own.
+What PGO adds is real evidence, gathered from profiling, about which concrete types actually show up at
+specific interface call sites during real execution. Instead of guessing, the compiler uses data from actual
+program runs. For example, the compiler might see that an interface method is almost always
+implemented by one concrete type.
+Let's use the previous Process function example:
+// func (Tester/Developer) Process(x int) int {
+// for i := range 10000000 {
+// x += i
+// }
+// return x
+// }
+var developer Developer
+var tester Tester
+func main() {
+  result := 0
+  var worker Worker
+  for i := range 1000 {
+  if i%100 == 0 {
+  worker = tester
+  } else {
+  worker = developer
+  }
+  result += worker.Process(i)
+  }
+  println(result)
+}
+After running this program and collecting the profile with pprof, we get a preprocessed PGO profile like this:
+GO PREPROFILE V1
+main.main
+main.Developer.Process
+14 214
+main.Developer.Process
+runtime.asyncPreempt
+1 5
+main.main
+main.Tester.Process
+14 2
+564
+Here, the call to Developer.Process is much hotter than the call to Tester.Process. The most important
+transformation happens at worker.Process(i). This is an interface call, so it could go to either
+Developer.Process or Tester.Process at runtime, depending on what worker is.
+Normally, the compiler cannot inline interface calls because they could be any concrete type. Both
+Developer.Process and Tester.Process could be called at that point.
+With PGO devirtualization, the compiler looks at the profile data and sees that Developer.Process is called
+much more often (weight 214) than Tester.Process (weight 2). Because almost every call goes to
+Developer.Process, the compiler can change the interface call into something like:
+if dev, ok := worker.(Developer); ok {
+  dev.Process(i) // Direct call - can be inlined now!
+} else {
+  worker.Process(i) // Fallback to interface call
+}
+This devirtualization makes a direct call to dev.Process(i), which the inliner can now optimize. Two
+optimizations happen here: the interface dispatch overhead goes away, and the function call overhead also
+goes away for the common case (about 99%). The rare case, when tester.Process(i) is called, still works
+but will be a little slower.
+NOTE
+What if, in a newer version of the code, someone removes the Developer type and only
+keeps the Tester type? This does not affect the compiler's decision at this stage. So, if the
+hottest callee (Developer.Process) is deleted in the new version:
+• The profile still says Developer.Process is hottest.
+• The compiler cannot find the symbol in the new code, so devirtualization is skipped.
+• The rare Tester.Process edge is ignored because it was never the hottest in the profile.
+Summary
+Go's runtime schedules goroutines using what is known as the MPG triad. An operating system thread (M)
+runs code only when it holds a logical processor token (P). A goroutine (G) executes on that thread. If the
+thread blocks because of a (blocked) syscall, it releases its P so another thread can pick it up and continue
+running other goroutines. Stack frames grow toward lower memory addresses. A stack pointer marks the
+top of the frame, while an argument pointer helps a callee find parameters that spill past the registers. The
+program counter provides the next instruction address, and on a call the return address is saved either on
+the stack for amd64 or in the link register for ARM64.
+Functions in Go are represented as ordinary values called function values (funcvals). A funcval starts with
+a code pointer followed by any captured variables. Assigning a named function creates a pre-compiled
+funcval symbol in read-only memory:
+565
+Illustration 266. RODATA holds function value symbol, TEXT holds code
+When a closure captures state, the funcval is allocated at runtime. The compiler captures variables by
+value if their address is never taken, if they are not reassigned after capture, and if the size is under 128
+bytes. Otherwise, the closure stores a pointer so later changes are visible. Function parameters always
+pass by value. For slices, maps, and channels the copied header still points to the original data, which
+means element mutations are visible but reassigning the header is not.
+A defer statement records a function call on a LIFO chain tied to the current frame:
+Illustration 267. All active defers linked in current goroutine
+Go evaluates the arguments immediately but runs the deferred call right before the surrounding function
+returns. Named result parameters allow a deferred closure to modify the return value. For simple patterns
+the compiler emits direct calls and uses a bitmap instead of actual records. More complex or dynamic
+cases allocate defer records either on the stack or from a pooled heap allocator that cleans up when the
+function ends.
+When panic is called, a _panic object is created and stack unwinding begins. Deferred calls are run in
+reverse order until one of them calls recover. If recover returns a non-nil value, the panic is cleared and
+normal return continues. If not, the runtime prints a stack trace and the program terminates. From Go 1.21
+a panic with nil creates a PanicNilError so recover can tell the difference between a silent return and a
+panic with a nil argument.
+Profiling is supported through the runtime/pprof package. CPU profiling samples the program counter at
+fixed intervals, while heap and alloc profiles sample memory allocations based on size. mutex, block, and
+goroutine profiles collect data on contention, blocking, and snapshots of goroutine states. Profiles can be
+enabled using go test flags, HTTP endpoints, or programmatic calls, and are written in protobuf format for
+analysis with go tool pprof. Trace recording captures scheduler, garbage collector, network, and syscall
+events. Each thread writes to its own buffer protected by a sequence lock, and timestamps use delta
+566
+encoding to save space. The browser viewer shows global counters, per-P timelines, flow arrows
+connecting blocking and unblocking, a view of operating system threads, and an event breakdown page
+that counts all event types. Enabling GODEBUG=traceallocfree=1 adds detailed information about memory
+spans, heap objects, and stack growth events for in-depth memory analysis.
+Profile-guided optimisation (PGO) takes a sampled CPU profile and feeds it back into the compiler:
+Illustration 268. Profile-guided optimization loop in Go compilation
+A default.pgo file in the module root or a file passed with -pgo is processed by the preprofile tool into a
+compact map of caller and callee pairs with weighted call-site offsets. On the next build the compiler uses
+these weights to prefer inlining on hot call edges. Starting in Go 1.21 it can also devirtualise interface or
+function-value calls that mostly target one concrete callee. This often leads to CPU time savings of several
+percent. Developers can repeat the cycle by collecting fresh profiles under real workloads, rebuilding with
+PGO, and redeploying for continuous improvement.
+Knowing how MPG scheduling works, how calls use registers and stack frames, how funcvals are laid out,
+how defer and panic are implemented, and how profiling and tracing tools gather data gives a developer
+the ability to reason about performance, debug runtime behavior, and guide the compiler toward producing
+faster binaries.

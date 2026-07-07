@@ -1,0 +1,2 @@
+
+This indicates that the uniqueness constraint is not enforced across partitions. And we can’t create unique id index on partitioned table (however, we can create [unique id index for every partition](https://www.percona.com/blog/postgresql-partitioning-made-easy-using-pg_partman-timebased/), but it does not guarantee unique across whole partitioned table).

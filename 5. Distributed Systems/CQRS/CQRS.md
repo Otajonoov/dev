@@ -1,0 +1,1 @@
+**CQRS** (command query respon­sibility segregation — разделение ответственности командных запросов)
