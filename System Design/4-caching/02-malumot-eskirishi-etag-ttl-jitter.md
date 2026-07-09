@@ -365,8 +365,8 @@ TTL ≈ 5 daqiqa (yangilanish davriga mos), jitter ±20s. Bitta kalit juda mashh
 
 **Bog'liq oldingi mavzular:**
 - [`01-oqish-strategiyalari.md`](01-oqish-strategiyalari.md) — cache-aside, hit/miss, TTL bu yerda birinchi paydo bo'lgan.
-- [`../02-kengayish-usullari/04-cdn.md`](../02-kengayish-usullari/04-cdn.md) — CDN ham `Cache-Control`/`ETag`ga tayanadi; HTTP caching CDN'ning yuragidir.
-- [`../03-malumotlar-ombori/`](../03-malumotlar-ombori/) — replication lag ham "eskirgan nusxa" muammosining bir turi.
+- [`../2-kengayish-usullari/04-cdn.md`](../2-kengayish-usullari/04-cdn.md) — CDN ham `Cache-Control`/`ETag`ga tayanadi; HTTP caching CDN'ning yuragidir.
+- [`../3-malumotlar-ombori/`](../3-malumotlar-ombori/) — replication lag ham "eskirgan nusxa" muammosining bir turi.
 
 **Takrorlash jadvali:**
 - **Ertaga:** "O'z-o'zini tekshir" 2 va 4-savollarga qaytib javob ber (stampede + singleflight).

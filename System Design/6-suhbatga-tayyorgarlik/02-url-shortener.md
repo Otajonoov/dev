@@ -478,9 +478,9 @@ Endi storage asosiy bottleneck — 1 rasm ~2MB, DB emas object storage kerak. Ko
 ## 🔁 Takrorlash
 
 **Bog'liq oldingi mavzular:**
-- [Caching — o'qish strategiyalari](../04-caching/01-oqish-strategiyalari.md) — read-through cache
-- [Ma'lumotlar ombori — Replication va Sharding](../03-malumotlar-ombori/04-replication-va-sharding.md) — 180 TB'ni bo'lish
-- [Kengayish usullari — Load Balancing](../02-kengayish-usullari/02-load-balancing.md) — 100K QPS'ni tarqatish
+- [Caching — o'qish strategiyalari](../4-caching/01-oqish-strategiyalari.md) — read-through cache
+- [Ma'lumotlar ombori — Replication va Sharding](../3-malumotlar-ombori/04-replication-va-sharding.md) — 180 TB'ni bo'lish
+- [Kengayish usullari — Load Balancing](../2-kengayish-usullari/02-load-balancing.md) — 100K QPS'ni tarqatish
 - [Tizim talablarini yig'ish](01-tizim-talablarini-yigish.md) — framework
 
 **Takrorlash jadvali:**

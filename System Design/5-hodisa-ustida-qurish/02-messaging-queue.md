@@ -380,9 +380,9 @@ Buzuq xabar hech qachon muvaffaqiyatli ishlanmaydi, doim qayta urinib ko'riladi 
 
 - **Bog'liq oldingi mavzular:**
   - [01-event-driven-development.md](01-event-driven-development.md) — event g'oyasi (bu darsda uni qayerda saqlashni ko'rdik)
-  - [../02-kengayish-usullari/](../02-kengayish-usullari/) — buffering va backpressure yuk boshqaruvi bilan bog'liq
-  - [../03-malumotlar-ombori/](../03-malumotlar-ombori/) — idempotency uchun DB unique constraint
-  - [../04-caching/](../04-caching/) — ishlangan ID'larni Redis'da saqlash
+  - [../2-kengayish-usullari/](../2-kengayish-usullari/) — buffering va backpressure yuk boshqaruvi bilan bog'liq
+  - [../3-malumotlar-ombori/](../3-malumotlar-ombori/) — idempotency uchun DB unique constraint
+  - [../4-caching/](../4-caching/) — ishlangan ID'larni Redis'da saqlash
 - **Keyingi dars:** [03-pub-sub-va-fan-out.md](03-pub-sub-va-fan-out.md) — bitta xabarni ko'p iste'molchiga qanday tarqatamiz?
 - **Takrorlash jadvali:** "O'z-o'zini tekshir" savollariga → **ertaga** → **3 kundan keyin** → **1 haftadan keyin** qaytib javob ber.
 - **Feynman testi:** "at-least-once + idempotency" g'oyasini kod ishlatmasdan, do'stingga 3 jumlada tushuntir. (Maslahat: "xat ikki marta kelsa ham, bir marta o'qigandek qilib qo'yamiz".)

@@ -327,7 +327,7 @@ So'rov `WHERE user_id = ? AND sana = ?` → `Index(user_id, sana)` (aniq filtrla
 ## 🔁 Takrorlash
 
 **Bog'liq oldingi mavzular:**
-- [1-modul: Disk latency](../01-tizimlar-negizi/) — full scan nega sekin, ketma-ket yozuv nega tez.
+- [1-modul: Disk latency](../1-tizimlar-negizi/) — full scan nega sekin, ketma-ket yozuv nega tez.
 - [02-malumotlar-ombori-oilalari.md](02-malumotlar-ombori-oilalari.md) — column-family DB'lar LSM-tree ustida qurilgan.
 
 **Shu modul ichida keyingi:**

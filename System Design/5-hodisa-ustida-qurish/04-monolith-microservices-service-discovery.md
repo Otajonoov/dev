@@ -553,9 +553,9 @@ Nusxalar (konteynerlar) o'chib-yonganda IP o'zgaradi; scaling'da bir nechta nusx
   - [01-event-driven-development.md](01-event-driven-development.md) — sync vs async, tight coupling (bu darsda arxitektura darajasida)
   - [02-messaging-queue.md](02-messaging-queue.md) — servislar orasidagi async aloqa asboblari
   - [03-pub-sub-va-fan-out.md](03-pub-sub-va-fan-out.md) — bir hodisani ko'p servisga tarqatish
-  - [../02-kengayish-usullari/](../02-kengayish-usullari/) — load balancing va horizontal scaling
-  - [../03-malumotlar-ombori/](../03-malumotlar-ombori/) — har servisga alohida DB (database per service)
-  - [../04-caching/](../04-caching/) — servislar orasida kesh va discovery
+  - [../2-kengayish-usullari/](../2-kengayish-usullari/) — load balancing va horizontal scaling
+  - [../3-malumotlar-ombori/](../3-malumotlar-ombori/) — har servisga alohida DB (database per service)
+  - [../4-caching/](../4-caching/) — servislar orasida kesh va discovery
 - **Takrorlash jadvali:** "O'z-o'zini tekshir" savollariga → **ertaga** → **3 kundan keyin** → **1 haftadan keyin** qaytib javob ber.
 - **Feynman testi:** "Avval monolith" qoidasini va service discovery'ni kod ishlatmasdan, do'stingga 3 jumlada tushuntir. (Maslahat: "savdo markazi" va "telefon ma'lumotnomasi" analogiyalaridan boshla.)
 - **Modul yakuni:** Tabriklaymiz — 5-modulni tugatding! Endi bilasan: hodisa nima, navbat qanday ishlaydi, hodisa ko'pga qanday tarqaladi va servislar qanday tashkil qilinadi hamda bir-birini topadi. Butun modulni bitta jumlada: **"Servislar bir-birini shaxsan kutmasin — hodisalar orqali mustaqil, chidamli va masshtablanuvchi bo'lib gaplashsin."**

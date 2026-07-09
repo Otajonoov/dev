@@ -312,7 +312,7 @@ Kichik e-commerce uchun API Gateway dizayn qil. Talablar: (a) 3 servis (user, or
 **Bog'liq oldingi mavzular:**
 - [Modul 2: Rate limiting va backpressure](./05-rate-limiting-va-backpressure.md) — rate limiter'ni aynan Gateway'da qo'yish qulay; bu yerda darvozaning o'zini ko'rdik.
 - [Modul 2: Load balancing](./02-load-balancing.md) — Gateway ham L7 darajada ishlaydi va SPOF bo'lmasligi uchun juftlanadi.
-- [Modul 1: API uslublari (REST, GraphQL, gRPC)](../01-tizimlar-negizi/05-api-uslublari-rest-graphql-grpc.md) — Gateway tashqarida REST/GraphQL qabul qilib, ichkarida gRPC'ga o'tishi mumkin.
+- [Modul 1: API uslublari (REST, GraphQL, gRPC)](../1-tizimlar-negizi/05-api-uslublari-rest-graphql-grpc.md) — Gateway tashqarida REST/GraphQL qabul qilib, ichkarida gRPC'ga o'tishi mumkin.
 
 **Takrorlash jadvali:**
 - **Ertaga:** Gateway 6 vazifasini (auth, rate limit, routing, transformation, monitoring, security) yoddan yoz.
@@ -321,5 +321,4 @@ Kichik e-commerce uchun API Gateway dizayn qil. Talablar: (a) 3 servis (user, or
 
 **Feynman testi:** Do'stingga "API Gateway nima va nega har servisga alohida qorovul qo'ymaymiz?" ni biznes markazidagi qabulxona misolida 3 jumlada tushuntir.
 
-**Keyingi qadam:** Modul 2 tugadi — kengayish, load balancing, stateless, CDN, rate limiting va API Gateway'ni bilasan. Keyingi modulda ma'lumotlar bazasini kengaytirishga (replication, sharding) o'tamiz: [Modul 3: Replication va sharding](../03-malumotlar-ombori/04-replication-va-sharding.md).
-</content>
+**Keyingi qadam:** Modul 2 tugadi — kengayish, load balancing, stateless, CDN, rate limiting va API Gateway'ni bilasan. Keyingi modulda ma'lumotlar bazasini kengaytirishga (replication, sharding) o'tamiz: [Modul 3: Replication va sharding](../3-malumotlar-ombori/04-replication-va-sharding.md).

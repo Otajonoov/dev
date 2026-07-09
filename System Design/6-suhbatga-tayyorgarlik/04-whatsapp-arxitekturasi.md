@@ -532,9 +532,9 @@ Ha, o'xshaydi — guruh xabari kichik fan-out. Har xabar guruh a'zolari sonicha 
 ## 🔁 Takrorlash
 
 **Bog'liq oldingi mavzular:**
-- [Hodisa ustida qurish — Pub/Sub va Fan-out](../05-hodisa-ustida-qurish/03-pub-sub-va-fan-out.md) — Message Router
-- [Kengayish usullari — Load Balancing](../02-kengayish-usullari/02-load-balancing.md) — connection serverlarni tarqatish
-- [Caching — o'qish strategiyalari](../04-caching/01-oqish-strategiyalari.md) — presence Redis
+- [Hodisa ustida qurish — Pub/Sub va Fan-out](../5-hodisa-ustida-qurish/03-pub-sub-va-fan-out.md) — Message Router
+- [Kengayish usullari — Load Balancing](../2-kengayish-usullari/02-load-balancing.md) — connection serverlarni tarqatish
+- [Caching — o'qish strategiyalari](../4-caching/01-oqish-strategiyalari.md) — presence Redis
 - [Twitter arxitekturasi](03-twitter-arxitekturasi.md) — fan-out taqqoslash
 
 **Takrorlash jadvali:**

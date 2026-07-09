@@ -400,8 +400,8 @@ Ommaviy API platforma dizayn qil (masalan ob-havo API'si). Talablar: (a) bepul f
 - [Modul 2: Vertikal va gorizontal kengayish](./01-vertikal-va-gorizontal-kengayish.md) — kengayish "ko'proq ko'tarish", rate limiting "chegarani rad etish"; ikkalasi birga ishlaydi.
 - [Modul 2: Load balancing](./02-load-balancing.md) — nega 5 serverda local limit "sizib" ketadi; LB so'rovlarni tarqatadi.
 - [Modul 2: Stateful va stateless](./03-stateful-va-stateless.md) — taqsimlangan limit hisoblagichi ham *tashqi holat* (Redis'da), aynan shu sababdan.
-- [1-modul: Internet tarmog'i va protokollari](../01-tizimlar-negizi/04-internet-tarmogi-va-protokollari.md) — HTTP status kodlari (429) va headerlar shu yerda o'rganilgan.
-- [1-modul: API uslublari (REST, GraphQL, gRPC)](../01-tizimlar-negizi/05-api-uslublari-rest-graphql-grpc.md) — API Gateway va endpoint tushunchasi.
+- [1-modul: Internet tarmog'i va protokollari](../1-tizimlar-negizi/04-internet-tarmogi-va-protokollari.md) — HTTP status kodlari (429) va headerlar shu yerda o'rganilgan.
+- [1-modul: API uslublari (REST, GraphQL, gRPC)](../1-tizimlar-negizi/05-api-uslublari-rest-graphql-grpc.md) — API Gateway va endpoint tushunchasi.
 
 **Takrorlash jadvali:**
 - **Ertaga:** 4 ta algoritmni (Fixed/Sliding Window, Token/Leaky Bucket) va har birining burst xatti-harakatini yoddan yoz.

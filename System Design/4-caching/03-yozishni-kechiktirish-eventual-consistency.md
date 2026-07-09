@@ -351,8 +351,8 @@ Write-back ideal: Redis `INCR` (tez), fon flusher har 5-10s da DB'ga batch upser
 **Bog'liq oldingi mavzular:**
 - [`01-oqish-strategiyalari.md`](01-oqish-strategiyalari.md) — cache-aside o'qish; bu darsda uning yozish tomonini yopdik.
 - [`02-malumot-eskirishi-etag-ttl-jitter.md`](02-malumot-eskirishi-etag-ttl-jitter.md) — invalidation va TTL; nomuvofiqlik yechimlari shu yerga tayanadi.
-- [`../02-kengayish-usullari/04-cdn.md`](../02-kengayish-usullari/04-cdn.md) — CDN invalidation ham xuddi shu "avval origin, keyin edge" tartibiga amal qiladi.
-- [`../03-malumotlar-ombori/`](../03-malumotlar-ombori/) — CAP teoremasi va replication: strong vs eventual consistency shu yerdan keladi.
+- [`../2-kengayish-usullari/04-cdn.md`](../2-kengayish-usullari/04-cdn.md) — CDN invalidation ham xuddi shu "avval origin, keyin edge" tartibiga amal qiladi.
+- [`../3-malumotlar-ombori/`](../3-malumotlar-ombori/) — CAP teoremasi va replication: strong vs eventual consistency shu yerdan keladi.
 
 **Takrorlash jadvali:**
 - **Ertaga:** "O'z-o'zini tekshir" 1 va 4-savollarga qaytib javob ber.

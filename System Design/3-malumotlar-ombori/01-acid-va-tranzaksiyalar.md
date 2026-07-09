@@ -336,8 +336,8 @@ bir chiptani band qilmasligini qanday ta'minlaysan? 4-5 jumlada tushuntir.
 ## 🔁 Takrorlash
 
 **Bog'liq oldingi mavzular:**
-- [1-modul: Disk latency va doimiy xotira](../01-tizimlar-negizi/) — Durability nega diskka tayanadi.
-- [2-modul: Kengayish usullari](../02-kengayish-usullari/) — bitta DB yukni ko'tara olmaganda nima bo'ladi (keyingi darslarga ko'prik).
+- [1-modul: Disk latency va doimiy xotira](../1-tizimlar-negizi/) — Durability nega diskka tayanadi.
+- [2-modul: Kengayish usullari](../2-kengayish-usullari/) — bitta DB yukni ko'tara olmaganda nima bo'ladi (keyingi darslarga ko'prik).
 
 **Shu modul ichida keyingi:**
 - [02-malumotlar-ombori-oilalari.md](02-malumotlar-ombori-oilalari.md) — ACID'ni to'liq beruvchi SQL va bermaydigan NoSQL oilalar.

@@ -351,8 +351,8 @@ Hamma xabar **bitta** partition'ga tushadi. Tartib saqlanadi, lekin **parallelli
 - **Bog'liq oldingi mavzular:**
   - [01-event-driven-development.md](01-event-driven-development.md) — decoupling (fan-out shuning natijasi)
   - [02-messaging-queue.md](02-messaging-queue.md) — Kafka log modeli va offset (bu darsda consumer group offseti)
-  - [../02-kengayish-usullari/](../02-kengayish-usullari/) — parallellik va partitioning bilan bog'liq
-  - [../03-malumotlar-ombori/](../03-malumotlar-ombori/) — sharding (partition sharding'ga o'xshaydi)
+  - [../2-kengayish-usullari/](../2-kengayish-usullari/) — parallellik va partitioning bilan bog'liq
+  - [../3-malumotlar-ombori/](../3-malumotlar-ombori/) — sharding (partition sharding'ga o'xshaydi)
 - **Keyingi dars:** [04-monolith-microservices-service-discovery.md](04-monolith-microservices-service-discovery.md) — bu servislarni qanday tashkil qilamiz va ular bir-birini qanday topadi?
 - **Takrorlash jadvali:** "O'z-o'zini tekshir" savollariga → **ertaga** → **3 kundan keyin** → **1 haftadan keyin** qaytib javob ber.
 - **Feynman testi:** Consumer group tushunchasini kod ishlatmasdan, do'stingga 3 jumlada tushuntir. (Maslahat: "bir jamoa ishni bo'lishadi, jamoalar esa bir-biridan mustaqil".)

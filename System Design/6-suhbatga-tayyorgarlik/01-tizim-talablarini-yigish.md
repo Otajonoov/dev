@@ -372,9 +372,9 @@ Funksional: qisqartir, redirect, statistika. Nofunksional: 100M yozish/kun, 10:1
 ## 🔁 Takrorlash
 
 **Bog'liq oldingi mavzular:**
-- [Kengayish usullari — Load Balancing](../02-kengayish-usullari/02-load-balancing.md) — QPS katta bo'lganda
-- [Ma'lumotlar ombori — Replication va Sharding](../03-malumotlar-ombori/04-replication-va-sharding.md) — storage katta bo'lganda
-- [Caching — o'qish strategiyalari](../04-caching/01-oqish-strategiyalari.md) — read/write nisbati katta bo'lganda
+- [Kengayish usullari — Load Balancing](../2-kengayish-usullari/02-load-balancing.md) — QPS katta bo'lganda
+- [Ma'lumotlar ombori — Replication va Sharding](../3-malumotlar-ombori/04-replication-va-sharding.md) — storage katta bo'lganda
+- [Caching — o'qish strategiyalari](../4-caching/01-oqish-strategiyalari.md) — read/write nisbati katta bo'lganda
 
 **Takrorlash jadvali:**
 - **Ertaga:** "O'z-o'zini tekshir" 2 va 5-savollarga qaytib javob ber.

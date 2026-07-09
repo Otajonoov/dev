@@ -457,9 +457,9 @@ Story'ga Redis TTL 24 soat qo'yiladi — o'zi o'chadi, eski story tozalash cron 
 ## 🔁 Takrorlash
 
 **Bog'liq oldingi mavzular:**
-- [Hodisa ustida qurish — Pub/Sub va Fan-out](../05-hodisa-ustida-qurish/03-pub-sub-va-fan-out.md) — Kafka, decoupling
-- [Caching — o'qish strategiyalari](../04-caching/01-oqish-strategiyalari.md) — timeline cache
-- [Ma'lumotlar ombori — Replication va Sharding](../03-malumotlar-ombori/04-replication-va-sharding.md) — tweet DB sharding
+- [Hodisa ustida qurish — Pub/Sub va Fan-out](../5-hodisa-ustida-qurish/03-pub-sub-va-fan-out.md) — Kafka, decoupling
+- [Caching — o'qish strategiyalari](../4-caching/01-oqish-strategiyalari.md) — timeline cache
+- [Ma'lumotlar ombori — Replication va Sharding](../3-malumotlar-ombori/04-replication-va-sharding.md) — tweet DB sharding
 - [URL Shortener](02-url-shortener.md) — oldingi case study
 
 **Takrorlash jadvali:**

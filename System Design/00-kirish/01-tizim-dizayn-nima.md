@@ -1,7 +1,7 @@
-# Tizim dizayn nima?
+# System Design nima?
 
 > **Modul:** Kirish · **Dars:** 1 (kursning birinchi darsi)
-> **Maqsad:** "Tizim dizayn" nima ekanini, uni yaxshi qiladigan 3 ustun (Reliability, Scalability, Maintainability), asosiy metrikalar (availability, latency, throughput, SLA/SLO) va suhbatda (interview) tizimni bosqichma-bosqich loyihalash tartibini tushunish.
+> **Maqsad:** "System Design" nima ekanini, uni yaxshi qiladigan 3 ustun (Reliability, Scalability, Maintainability), asosiy metrikalar (latency, throughput, availability, durability, SLA/SLO) va suhbatda (interview) tizimni bosqichma-bosqich loyihalash tartibini tushunish.
 
 ---
 
@@ -11,9 +11,9 @@ Tasavvur qil: sen bitta serverda ishlaydigan onlayn xizmat yozding. Boshida kuni
 
 Keyin xizmat mashhur bo'ldi. Endi bir vaqtda **millionlab kishi** kiradi. Server nafas ololmay qoladi, ma'lumotlar bazasi tiqilib qoladi, sahifa ochilmaydi. Bitta server yiqilsa — butun xizmat o'ladi.
 
-Bu yerda savol kodni qanday yozishda emas — **arxitekturada**: qanday qilib tizim millionlab foydalanuvchi kelganda ham tik turadi, tez ishlaydi va buzilmaydi? Mana shu savolga javob beradigan fan — **tizim dizayn (system design)**.
+Bu yerda savol kodni qanday yozishda emas — **arxitekturada**: qanday qilib tizim millionlab foydalanuvchi kelganda ham tik turadi, tez ishlaydi va buzilmaydi? Mana shu savolga javob beradigan fan — **System Design**.
 
-> **Diqqat:** Kod yozish "bitta uy qurish"ga o'xshaydi. Tizim dizayn esa — "million kishilik shaharning suv, yo'l va elektr tarmog'ini loyihalash". Boshqa ko'lam, boshqa qonunlar.
+> **Diqqat:** Kod yozish "bitta uy qurish"ga o'xshaydi. System Design esa — "million kishilik shaharning suv, yo'l va elektr tarmog'ini loyihalash". Boshqa ko'lam, boshqa qonunlar.
 
 ---
 
@@ -27,7 +27,7 @@ Bitta uy oshxonasi 4 kishiga ovqat qiladi — oddiy. Endi shaharning yarmiga ovq
 | 4 kishi | Talab oshsa filial qo'shasan (**Scalability**) |
 | Retseptni o'zing bilasan | Har kim tushunadigan tartib kerak (**Maintainability**) |
 
-Tizim dizayn — aynan shu "uydan shaharga o'tish" san'ati: bir server bilan boshlangan narsani minglab server ishlaydigan barqaror tarmoqqa aylantirish.
+System Design — aynan shu "uydan shaharga o'tish" san'ati: bir server bilan boshlangan narsani minglab server ishlaydigan barqaror tarmoqqa aylantirish.
 
 > **Analogiya chegarasi:** Restoran filiallari mustaqil ishlaydi. Serverlar esa ko'pincha bitta umumiy ma'lumotlar bazasiga bog'lanadi — shuning uchun "cheksiz o'sish" hamma qismni birga o'ylaganda ishlaydi. Buni keyingi modullarda ko'ramiz.
 
@@ -35,7 +35,7 @@ Tizim dizayn — aynan shu "uydan shaharga o'tish" san'ati: bir server bilan bos
 
 ## 3. Sodda ta'rif
 
-**Tizim dizayn (System Design)** — katta ko'lamdagi dasturiy tizimni arxitektura darajasida loyihalash: qaysi komponentlar bo'ladi, ular qanday bog'lanadi va yuklama oshganda tizim qanday tik turadi.
+**System Design** — katta ko'lamdagi dasturiy tizimni arxitektura darajasida loyihalash: qaysi komponentlar bo'ladi, ular qanday bog'lanadi va yuklama oshganda tizim qanday tik turadi.
 
 Bir jumlada: "Millionlab foydalanuvchiga ishonchli va tez xizmat qiladigan tizimni qanday quramiz?"
 
@@ -65,7 +65,7 @@ Client so'rov yuboradi, Load Balancer uni serverlarga bo'ladi, serverlar Cache v
 
 ---
 
-## 5. Tizim dizaynning 3 ustuni
+## 5. System Design'ning 3 ustuni
 
 Har qanday yaxshi tizim uch narsaga tayanadi. Bularni doim yodda tut — deyarli har bir qaror shu uchtasining birortasini yaxshilash uchun qilinadi.
 
@@ -107,12 +107,51 @@ Tizimni **tushunish, o'zgartirish va tuzatish oson** bo'ladi.
 | **Availability** | Tizim ishlab turgan vaqt foizi | 99.9% va undan yuqori |
 | **Durability** | Yozilgan ma'lumot yo'qolmasligi | 99.999999% |
 
-- **Latency (kechikish)** — "so'rov yuboribdan javob kelguncha necha millisekund?". Foydalanuvchi buni "tez/sekin" deb his qiladi.
-- **Throughput (o'tkazuvchanlik)** — "tizim soniyasiga nechta so'rovni ko'tara oladi?" (RPS — requests per second, yoki QPS — queries per second).
+### Latency — javob vaqti qayerda "yeyiladi"?
 
-> **Latency va throughput chalkashtirma:** Latency — *bitta* so'rov qancha kutadi. Throughput — *sekundiga nechta* so'rov o'tadi. Yo'l misolida: latency — bir mashina yo'lni necha daqiqada bosib o'tadi; throughput — soatiga nechta mashina o'tadi.
+**Latency (kechikish)** — so'rov yuborilgandan javob qaytgunicha o'tgan vaqt. Foydalanuvchi buni "tez/sekin" deb his qiladi. Lekin u yaxlit narsa emas — uch qismdan yig'iladi:
+
+| Qism | Nima bu | Muhim fakt |
+|------|---------|------------|
+| **Network latency** | So'rovning serverga borib-kelishi (round trip) | Fizika chegarasi bor: datacenter ichida ~0.5 ms, kontinentlararo ~150 ms — yorug'lik tezligini aldab bo'lmaydi |
+| **Processing time** | Business logic va database query bajarilishi | Kod optimizatsiyasi faqat shu qismga ta'sir qiladi |
+| **Queueing delay** | So'rov navbatda kutgan vaqt | Tizim yuklanganda aynan shu qism portlab ketadi |
+
+Apparat darajasidagi raqamlar (L1 cache ~1 ns, RAM ~100 ns, SSD ~100 µs, HDD ~10 ms) — [Kompyuter anatomiyasi](../1-tizimlar-negizi/01-kompyuter-anatomiyasi.md) darsidagi jadvalda. O'sha jadval — "nega DB'ga har safar bormasdan cache ishlatamiz" degan savolning matematik javobi.
+
+#### Average yolg'on gapiradi — percentile o'lcha
+
+O'rtacha (average) latency'da bitta juda sekin so'rov minglab tez so'rov orasida "erib ketadi". Shuning uchun **percentile**'lar o'lchanadi:
+
+| Percentile | Ma'nosi |
+|------------|---------|
+| **p50** (median) | So'rovlarning yarmi shundan tez |
+| **p95** | So'rovlarning 95% shundan tez |
+| **p99** | So'rovlarning 99% shundan tez |
+
+Agar p50 = 20 ms, lekin p99 = 900 ms bo'lsa — har 100-foydalanuvchi deyarli bir sekund kutyapti. Bu **tail latency** deyiladi va real production'da eng ko'p bosh og'rig'i beradigan narsa.
+
+> **Oltin qoida:** Monitoring'da doim p95/p99 kuzatiladi, average emas.
+
+### Throughput — o'tkazuvchanlik va Little's Law
+
+RPS, QPS, TPS — hammasi bitta g'oya: **vaqt birligida bajarilgan ish hajmi**.
+
+> **Latency va throughput chalkashtirma:** Latency — *bitta* mashinaning A'dan B'ga yetish vaqti. Throughput — soatiga nechta mashina o'tishi. Yo'lni kengaytirsang (ko'proq server) throughput oshadi, lekin bitta mashinaning tezligi o'zgarmaydi.
+
+Ular orasida matematik bog'liqlik bor — **Little's Law**:
+
+```text
+Concurrency = Throughput × Latency
+```
+
+Misol: server bir vaqtda 100 ta so'rovni ushlab tura oladi (aytaylik, 100 goroutine) va har bir so'rov 50 ms davom etadi. Demak maksimal throughput = 100 / 0.05 = **2000 RPS**. Capacity planning'da bu formula juda ko'p ishlatiladi.
+
+Yana bir muhim trade-off: **batching** throughput'ni oshiradi, lekin latency'ni yomonlashtiradi. Kafka producer message'larni batch qilib yig'ib yuboradi — throughput zo'r, lekin har bir message biroz kutib turadi.
 
 ### Availability hisoblash — "to'qqizlar" (nines)
+
+Klassik formula — vaqt asosida: `uptime / (uptime + downtime)`. Zamonaviy SRE yondashuvida esa so'rov asosida hisoblanadi: `successful requests / total requests`.
 
 Availability foizini "necha to'qqiz" (how many nines) deb aytishadi. Har qo'shimcha to'qqiz — yiliga ancha kam to'xtash demak.
 
@@ -125,7 +164,23 @@ Availability = Uptime / (Uptime + Downtime) x 100%
 99.999%  (5 nine)  -> yiliga ~5 daqiqa to'xtaydi
 ```
 
-Diqqat: har qo'shimcha to'qqiz qo'shish **eksponensial qimmatlashadi** — 99.9% dan 99.99% ga o'tish uchun zaxira serverlar, avtomatik failover, ko'p region kerak bo'ladi.
+Diqqat: har qo'shimcha to'qqiz qo'shish **eksponensial qimmatlashadi** — 99.9% dan 99.99% ga o'tish uchun zaxira serverlar, avtomatik failover, ko'p region kerak bo'ladi. Shuning uchun "hamma joyda five nines" degan gap muhandislik emas, marketing.
+
+#### Zanjir va zaxira matematikasi
+
+Microservice arxitekturasidagi asosiy tuzoq — **serial composition** (ketma-ket zanjir): so'rov 3 ta service orqali ketma-ket o'tsa va har biri 99.9% bo'lsa:
+
+```text
+0.999 × 0.999 × 0.999 ≈ 99.7%   <- zanjir uzaygani sari availability pasayadi
+```
+
+Yechim — **redundancy** (zaxira): 99% li ikkita node parallel tursa, tizim faqat ikkalasi *birdan* yiqilsa to'xtaydi:
+
+```text
+1 − (0.01 × 0.01) = 99.99%   <- ikkita "o'rtacha" node bitta "zo'r" node'dan ishonchliroq
+```
+
+> **Ikki formula — butun distributed systems'ning "nega"si:** ketma-ket zanjirni qisqartir, parallel zaxirani ko'paytir.
 
 ### SLA, SLO, SLI — va'da, maqsad va o'lchov
 
@@ -149,6 +204,34 @@ Deyarli mumkin emas. 99.99% — yiliga atigi ~52 daqiqa to'xtash. Bitta serverli
 Bunday SLA uchun kamida ikkita server (zaxira), avtomatik failover va monitoring kerak. Ya'ni yuqori availability — bu bitta serverning sifati emas, balki **taqsimlangan zaxira** natijasi. Bu — nega SPOF (bitta yiqiladigan nuqta) xavfli ekanini ko'rsatadi.
 
 </details>
+
+### Durability — availability bilan adashtirma
+
+Bu interview'dagi klassik savol. Farqi bir jumlada:
+
+- **Availability:** "hozir o'qiy olamanmi?" — *vaqtinchalik* holat.
+- **Durability:** "ma'lumot umuman yo'qolmaganmi?" — *doimiy* holat.
+
+Eng yaxshi misol — **Amazon S3**: durability 99.999999999% (11 ta to'qqiz), availability esa "atigi" 99.99%. Ya'ni ma'lumot bir necha daqiqa o'qib bo'lmasligi mumkin, lekin yo'qolib ketish ehtimoli deyarli nol.
+
+Durability amalda to'rt mexanizm bilan ta'minlanadi:
+
+| Mexanizm | Qanday ishlaydi | Misol / trade-off |
+|----------|-----------------|-------------------|
+| **WAL** (Write-Ahead Log) | Avval log'ga yoziladi, keyin data page'ga; crash bo'lsa log'dan tiklanadi | PostgreSQL — batafsil: [WAL darsi](<../../2. Database/2. Postgres/2. Advanced PostgreSQL/10. WAL — Write-Ahead Log.md>) |
+| **fsync** | OS buferidan diskka majburiy yozish | PostgreSQL'da `synchronous_commit = off` → latency yaxshilanadi, lekin crash'da oxirgi transaction'lar yo'qolishi mumkin |
+| **Replication** | Nusxa boshqa node'larda ham saqlanadi | Kafka'da `acks=all` — barcha in-sync replica tasdiqlamaguncha write muvaffaqiyatli emas |
+| **Backup** | Davriy nusxa + geografik taqsimlash | Boshqa region'dagi saqlash |
+
+### Metrikalar orasidagi trade-off'lar
+
+To'rttala metrikani birdaniga maksimal qilib bo'lmaydi:
+
+- **Durability oshirsang** (har write'da fsync + synchronous replication) → latency o'sadi.
+- **Availability uchun replica ko'paytirsang** → consistency muammolari chiqadi (bu [CAP teoremasi](../3-malumotlar-ombori/05-cap-teoremasi.md)ga olib boradi).
+- **Throughput uchun batching qilsang** → latency yomonlashadi.
+
+> **Birinchi savol:** Har qanday system design suhbati "bu tizim uchun qaysi metrika ustuvor?" dan boshlanadi. To'lov tizimida durability va consistency birinchi o'rinda — pul yo'qolishi mumkin emas, foydalanuvchi 200 ms kutsa mayli. Analytics dashboard'da aksincha: latency muhim, data biroz eskirgan bo'lsa hech narsa qilmaydi.
 
 ---
 
@@ -209,23 +292,55 @@ Noto'g'ri — SLI o'lchaydi, SLO ichki maqsad, SLA esa jarima bilan yuridik va'd
 ⚠️ **Xato 3: "Latency past bo'lsa, throughput ham avtomatik yuqori."**
 Noto'g'ri — bular bog'liq, lekin bir xil emas. Bitta so'rov tez javob bersa ham (past latency), tizim soniyasiga oz so'rov ko'tarsa (past throughput) bo'ladi. To'g'risi: ikkalasini alohida o'lchash va optimallashtirish kerak.
 
+⚠️ **Xato 4: "Availability yuqori bo'lsa, durability ham yuqori."**
+Noto'g'ri — bular turli savollarga javob beradi: availability "hozir ishlayaptimi?", durability "ma'lumot yo'qolmadimi?". S3'da durability 11 ta to'qqiz, availability esa 4 ta. To'g'risi: ikkalasini alohida talab sifatida yoz.
+
+---
+
+## 📖 Lug'at
+
+Kursda tez-tez uchraydigan atamalar — bir jumlada:
+
+| Atama | Qisqacha ma'nosi |
+|-------|------------------|
+| **SPOF** (Single Point of Failure) | Yiqilsa butun tizimni to'xtatadigan yagona komponent (yagona DB, yagona load balancer). Yechimi — redundancy va failover. |
+| **Failover (avtomatik)** | Asosiy komponent yiqilganda trafikni zaxira nusxaga avtomatik o'tkazish — masalan, DB primary o'lsa, replica avtomatik primary bo'ladi. |
+| **Bottleneck (bo'g'iz)** | Tizimning eng sekin bo'g'ini — butun tizim throughput'i shu joy bilan cheklanadi. Amalda ko'pincha bu database bo'ladi. |
+| **Redundancy (zaxira)** | Bir komponentdan bir nechta nusxa tutish. Failover'ning old sharti va yuqori availability'ning asosi. |
+| **Fault tolerance** | Qisman nosozlikda ham tizim ishlashda davom etishi — redundancy + failover'ning natijasi. |
+| **Percentile (p50/p95/p99)** | "So'rovlarning N foizi shundan tez" chegarasi. p50 — median, p99 — eng sekin 1% boshlanadigan nuqta. |
+| **Tail latency** | p99 va undan yuqoridagi eng sekin so'rovlar kechikishi. Average'da ko'rinmaydi, foydalanuvchi esa his qiladi. |
+| **Queueing delay** | So'rov ishlov kutib navbatda turgan vaqt. Yuklama oshganda latency'ning aynan shu qismi portlaydi. |
+| **Little's Law** | `Concurrency = Throughput × Latency` — capacity planning'ning asosiy formulasi. |
+| **Batching** | Ko'p elementni to'plab bitta amalda yuborish: throughput oshadi, latency yomonlashadi (Kafka producer). |
+| **WAL** (Write-Ahead Log) | O'zgarish avval log'ga yoziladi, keyin asosiy ma'lumotga — crash'dan keyin tiklash manbai. Durability asosi. |
+| **fsync** | OS buferidagi ma'lumotni diskka majburan yozdirish — durability kafolati, latency narxi. |
+| **Replication** | Ma'lumot nusxasini boshqa node'larda saqlash — ham durability, ham availability uchun ishlaydi. |
+| **Back-of-the-envelope** | Taxminiy tez hisob-kitob (RPS, storage) — arxitektura qaroridan oldin miqyosni his qilish usuli. |
+
 ---
 
 ## Xulosa
 
-- **Tizim dizayn** — katta tizimni arxitektura darajasida loyihalash: "millionlab foydalanuvchini qanday ko'taramiz?".
+- **System Design** — katta tizimni arxitektura darajasida loyihalash: "millionlab foydalanuvchini qanday ko'taramiz?".
 - Yaxshi tizim 3 ustunga tayanadi: **Reliability** (ishonchlilik), **Scalability** (kengayuvchanlik), **Maintainability** (qo'llab-quvvatlash).
 - Har bir qaror — shu 3 ustun orasidagi murosaga kelishuv (trade-off); "eng yaxshi" emas, "talabga mos" dizayn.
-- Asosiy metrikalar: **Latency** (bitta so'rov vaqti), **Throughput** (RPS), **Availability** (ishlash foizi), **Durability**.
-- **Availability** "to'qqizlar" bilan o'lchanadi; har qo'shimcha to'qqiz eksponensial qimmat.
+- Asosiy metrikalar: **Latency** (bitta so'rov vaqti), **Throughput** (RPS), **Availability** (ishlash foizi), **Durability** (ma'lumot yo'qolmasligi).
+- Latency uch qismdan yig'iladi: **network + processing + queueing**; monitoring'da average emas, **p95/p99** kuzatiladi (tail latency).
+- **Little's Law:** `Concurrency = Throughput × Latency` — capacity planning formulasi.
+- **Availability** "to'qqizlar" bilan o'lchanadi; har qo'shimcha to'qqiz eksponensial qimmat. Ketma-ket zanjir availability'ni pasaytiradi, parallel zaxira oshiradi.
+- **Durability ≠ availability:** S3'da durability 11 to'qqiz, availability 4 to'qqiz. Durability'ni WAL, fsync, replication va backup ta'minlaydi.
+- Metrikalar orasida doim trade-off bor — suhbat "qaysi metrika ustuvor?" savolidan boshlanadi.
 - **SLI** o'lchaydi, **SLO** maqsad, **SLA** shartnoma.
 - Interview 5 bosqich: talab -> hajm hisobi -> yuqori dizayn -> chuqur ko'rish -> muammolar.
 
 ## 🧠 Eslab qol
 
-- Tizim dizayn = "uydan shaharga" o'tish san'ati.
+- System Design = "uydan shaharga" o'tish san'ati.
 - 3 ustun: Reliability, Scalability, Maintainability.
 - Latency = bitta so'rov vaqti; Throughput = sekundiga so'rovlar soni.
+- Average yolg'on gapiradi — **p99'ni kuzat**.
+- Availability = "hozir ishlayaptimi?"; Durability = "ma'lumot yo'qolmadimi?".
 - Har qo'shimcha "to'qqiz" eksponensial qimmatlashadi.
 - Interview: avval TALAB so'ra, keyin chiz.
 
@@ -302,17 +417,16 @@ Jamoa shunday dizayn taqdim qildi: "1 ta kuchli server, unda ham API, ham DB, ha
 ## 🔁 Takrorlash
 
 **Bog'liq keyingi mavzular:**
-- [Modul 1: Kompyuter anatomiyasi](../01-tizimlar-negizi/01-kompyuter-anatomiyasi.md) — latency/throughput aynan apparatdan kelib chiqadi.
-- [Modul 2: Vertikal va gorizontal kengayish](../02-kengayish-usullari/01-vertikal-va-gorizontal-kengayish.md) — Scalability ustunini amalda ko'ramiz.
-- [Modul 2: Load balancing](../02-kengayish-usullari/02-load-balancing.md) — SPOF'ni yo'qotish va availability oshirish.
+- [Modul 1: Kompyuter anatomiyasi](../1-tizimlar-negizi/01-kompyuter-anatomiyasi.md) — latency/throughput aynan apparatdan kelib chiqadi.
+- [Modul 2: Vertikal va gorizontal kengayish](../2-kengayish-usullari/01-vertikal-va-gorizontal-kengayish.md) — Scalability ustunini amalda ko'ramiz.
+- [Modul 2: Load balancing](../2-kengayish-usullari/02-load-balancing.md) — SPOF'ni yo'qotish va availability oshirish.
+- [Modul 3: CAP teoremasi](../3-malumotlar-ombori/05-cap-teoremasi.md) — availability ↔ consistency trade-off'ining davomi.
 
 **Takrorlash jadvali:**
 - **Ertaga:** availability "to'qqizlar" jadvalini (99% ... 99.999%) yoddan yoz.
 - **3 kundan keyin:** SLI/SLO/SLA farqini va 3 ustunni xotiradan tikla.
 - **1 haftadan keyin:** interview 5 bosqichini va back-of-envelope hisobini qaytadan bajar.
 
-**Feynman testi:** Do'stingga "tizim dizayn nima va nega bitta server yetmaydi?" ni kod va texnik atamalarsiz, faqat shahar restoran tarmog'i misolida 3 jumlada tushuntir.
+**Feynman testi:** Do'stingga "System Design nima va nega bitta server yetmaydi?" ni kod va texnik atamalarsiz, faqat shahar restoran tarmog'i misolida 3 jumlada tushuntir.
 
-**Keyingi dars:** [Kompyuter anatomiyasi](../01-tizimlar-negizi/01-kompyuter-anatomiyasi.md) — tizimni qurishdan oldin kompyuter ichida ASLIDA nima sodir bo'lishini ko'ramiz.
-</content>
-</invoke>
+**Keyingi dars:** [Kompyuter anatomiyasi](../1-tizimlar-negizi/01-kompyuter-anatomiyasi.md) — tizimni qurishdan oldin kompyuter ichida ASLIDA nima sodir bo'lishini ko'ramiz.

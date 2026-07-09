@@ -173,7 +173,7 @@ rdb.Set(ctx, "user:42", data, time.Hour)
 ```
 
 > **Bog'lanish:** node qo'shilganda/o'chganda slotlar qayta taqsimlanadi — bu 3-darsdagi
-> **consistent hashing** muammosi ([`../03-malumotlar-ombori/04-replication-va-sharding.md`](../03-malumotlar-ombori/04-replication-va-sharding.md)).
+> **consistent hashing** muammosi ([`../3-malumotlar-ombori/04-replication-va-sharding.md`](../3-malumotlar-ombori/04-replication-va-sharding.md)).
 > Redis slotlarni ko'chiradi, lekin faqat kerakli qismini.
 
 ### ⚠️ Ko'p uchraydigan xato — cross-slot amallar
@@ -418,7 +418,7 @@ qaysi Redis turi/amali (hint: `INCR`), DB'ga qanday ko'chiriladi (3-darsdagi qay
 - [`01-oqish-strategiyalari.md`](01-oqish-strategiyalari.md) — cache-aside, hit/miss, eviction (LRU/LFU/FIFO), kesh qatlamlari.
 - [`02-malumot-eskirishi-etag-ttl-jitter.md`](02-malumot-eskirishi-etag-ttl-jitter.md) — TTL, stampede va invalidation (bu darsdagi warm-up va poisoning shu yerga tayanadi).
 - [`03-yozishni-kechiktirish-eventual-consistency.md`](03-yozishni-kechiktirish-eventual-consistency.md) — write-back (view-counter amaliyoti shundan).
-- [`../03-malumotlar-ombori/04-replication-va-sharding.md`](../03-malumotlar-ombori/04-replication-va-sharding.md) — hash sharding va consistent hashing (Redis Cluster shunga tayanadi).
+- [`../3-malumotlar-ombori/04-replication-va-sharding.md`](../3-malumotlar-ombori/04-replication-va-sharding.md) — hash sharding va consistent hashing (Redis Cluster shunga tayanadi).
 
 **Takrorlash jadvali:**
 | Qachon | Nima qilish |

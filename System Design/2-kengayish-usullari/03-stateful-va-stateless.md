@@ -338,8 +338,8 @@ Sof JWT (b) talabini bajara olmaydi (darhol bekor qilib bo'lmaydi). Amaliy yechi
 **Bog'liq oldingi mavzular:**
 - [Modul 2: Load balancing](./02-load-balancing.md) — IP Hash algoritmi aynan sticky session'ni yaratadi; shu darsni eslab ko'r.
 - [Modul 2: Vertikal va gorizontal kengayish](./01-vertikal-va-gorizontal-kengayish.md) — stateless server "erkin kengayish"ning sharti.
-- [1-modul: Operatsion tizim va abstraksiya](../01-tizimlar-negizi/02-operatsion-tizim-va-abstraksiya.md) — jarayon (process) va uning alohida RAM maydoni; nega bir serverning map'i boshqasiga ko'rinmaydi.
-- [1-modul: API uslublari (REST, GraphQL, gRPC)](../01-tizimlar-negizi/05-api-uslublari-rest-graphql-grpc.md) — REST'ning "statelessness" tamoyili bevosita shu darsga bog'liq.
+- [1-modul: Operatsion tizim va abstraksiya](../1-tizimlar-negizi/02-operatsion-tizim-va-abstraksiya.md) — jarayon (process) va uning alohida RAM maydoni; nega bir serverning map'i boshqasiga ko'rinmaydi.
+- [1-modul: API uslublari (REST, GraphQL, gRPC)](../1-tizimlar-negizi/05-api-uslublari-rest-graphql-grpc.md) — REST'ning "statelessness" tamoyili bevosita shu darsga bog'liq.
 
 **Takrorlash jadvali:**
 - **Ertaga:** sticky session'ning 3 ta kamchiligini yoddan yoz.

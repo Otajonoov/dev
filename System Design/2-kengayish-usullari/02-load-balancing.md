@@ -482,8 +482,8 @@ E-commerce sayt dizayn qil. Talablar: (a) `/api/*` so'rovlar backend serverlarga
 
 **Bog'liq oldingi mavzular:**
 - [Modul 2: Vertikal va gorizontal kengayish](./01-vertikal-va-gorizontal-kengayish.md) — LB gorizontal kengayishni "ishlaydigan" qiladi; SPOF g'oyasi shu yerdan.
-- [1-modul: Internet tarmog'i va protokollari](../01-tizimlar-negizi/04-internet-tarmogi-va-protokollari.md) — OSI qatlamlari (L4 = TCP/UDP, L7 = HTTP) shu yerda o'rganilgan.
-- [1-modul: API uslublari (REST, GraphQL, gRPC)](../01-tizimlar-negizi/05-api-uslublari-rest-graphql-grpc.md) — L7 aynan HTTP/API so'rovlarini o'qib yo'naltiradi.
+- [1-modul: Internet tarmog'i va protokollari](../1-tizimlar-negizi/04-internet-tarmogi-va-protokollari.md) — OSI qatlamlari (L4 = TCP/UDP, L7 = HTTP) shu yerda o'rganilgan.
+- [1-modul: API uslublari (REST, GraphQL, gRPC)](../1-tizimlar-negizi/05-api-uslublari-rest-graphql-grpc.md) — L7 aynan HTTP/API so'rovlarini o'qib yo'naltiradi.
 
 **Takrorlash jadvali:**
 - **Ertaga:** 4 ta algoritmni (RR, Weighted, Least Conn, IP Hash) yoddan va har biriga bittadan vaziyat misolini yoz.

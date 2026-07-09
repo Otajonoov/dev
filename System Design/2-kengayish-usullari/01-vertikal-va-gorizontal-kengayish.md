@@ -271,9 +271,9 @@ Kunduzi 500000/5000 = 100 server (+ buffer). Kechasi 20000/5000 = 4 server. Farq
 ## 🔁 Takrorlash
 
 **Bog'liq oldingi mavzular:**
-- [1-modul: Kompyuter anatomiyasi](../01-tizimlar-negizi/01-kompyuter-anatomiyasi.md) — CPU, RAM nima ekanini eslab ol; vertikal kengayish aynan shularni oshiradi.
-- [1-modul: Operatsion tizim va abstraksiya](../01-tizimlar-negizi/02-operatsion-tizim-va-abstraksiya.md) — jarayon (process) va resurs cheklovlari.
-- [1-modul: Internet tarmog'i va protokollari](../01-tizimlar-negizi/04-internet-tarmogi-va-protokollari.md) — so'rov (request) tarmoq orqali qanday keladi.
+- [1-modul: Kompyuter anatomiyasi](../1-tizimlar-negizi/01-kompyuter-anatomiyasi.md) — CPU, RAM nima ekanini eslab ol; vertikal kengayish aynan shularni oshiradi.
+- [1-modul: Operatsion tizim va abstraksiya](../1-tizimlar-negizi/02-operatsion-tizim-va-abstraksiya.md) — jarayon (process) va resurs cheklovlari.
+- [1-modul: Internet tarmog'i va protokollari](../1-tizimlar-negizi/04-internet-tarmogi-va-protokollari.md) — so'rov (request) tarmoq orqali qanday keladi.
 
 **Takrorlash jadvali:**
 - **Ertaga:** "O'z-o'zini tekshir" 1 va 3-savollarga qaytib javob ber.

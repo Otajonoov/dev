@@ -578,7 +578,7 @@ so'rovi va hot partition xavfini hisobga olib asosla. Mashhur bloger muammosini 
 ## 🔁 Takrorlash
 
 **Bog'liq oldingi mavzular:**
-- [2-modul: Kengayish va load balancing](../02-kengayish-usullari/) — app serverlarni tarqatish; bu darsda DB darajasiga tushdik.
+- [2-modul: Kengayish va load balancing](../2-kengayish-usullari/) — app serverlarni tarqatish; bu darsda DB darajasiga tushdik.
 - [01-acid-va-tranzaksiyalar.md](01-acid-va-tranzaksiyalar.md) — shardlar bo'ylab tranzaksiya (distributed transaction) nega qiyin.
 - [02-malumotlar-ombori-oilalari.md](02-malumotlar-ombori-oilalari.md) — column-family DB'lar sharding va consistent hashing'ni ichiga qurgan.
 

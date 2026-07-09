@@ -1,7 +1,7 @@
 # 04.1 — O'qish strategiyalari (Read strategies)
 
 > **Modul 4 — Keshlash (Caching), 1-dars**
-> Oldingi bilim: 1-modulda kompyuter anatomiyasi (RAM tez, disk sekin), 2-modulda kengayish va **CDN** ([`../02-kengayish-usullari/04-cdn.md`](../02-kengayish-usullari/04-cdn.md)), 3-modulda ma'lumotlar ombori va replication. Bu darsda o'sha bilimlarni ustiga qo'yamiz.
+> Oldingi bilim: 1-modulda kompyuter anatomiyasi (RAM tez, disk sekin), 2-modulda kengayish va **CDN** ([`../2-kengayish-usullari/04-cdn.md`](../2-kengayish-usullari/04-cdn.md)), 3-modulda ma'lumotlar ombori va replication. Bu darsda o'sha bilimlarni ustiga qo'yamiz.
 
 ---
 
@@ -409,9 +409,9 @@ Trending ro'yxati hamma uchun bir xil (personalizatsiya yo'q) → juda yaxshi ke
 ## 🔁 Takrorlash
 
 **Bog'liq oldingi mavzular:**
-- [`../01-tizimlar-negizi/`](../01-tizimlar-negizi/) — RAM vs disk tezligi, latency asoslari (kesh nima uchun tez).
-- [`../02-kengayish-usullari/04-cdn.md`](../02-kengayish-usullari/04-cdn.md) — CDN ham kesh qatlami (browser bilan Redis oralig'ida).
-- [`../03-malumotlar-ombori/`](../03-malumotlar-ombori/) — replication va read replica: kesh bilan birga DB o'qish yukini kamaytiradi.
+- [`../1-tizimlar-negizi/`](../1-tizimlar-negizi/) — RAM vs disk tezligi, latency asoslari (kesh nima uchun tez).
+- [`../2-kengayish-usullari/04-cdn.md`](../2-kengayish-usullari/04-cdn.md) — CDN ham kesh qatlami (browser bilan Redis oralig'ida).
+- [`../3-malumotlar-ombori/`](../3-malumotlar-ombori/) — replication va read replica: kesh bilan birga DB o'qish yukini kamaytiradi.
 
 **Takrorlash jadvali:**
 - **Ertaga:** "O'z-o'zini tekshir" 1, 3, 5-savollarga qaytib javob ber.

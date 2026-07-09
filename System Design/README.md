@@ -8,7 +8,7 @@
 
 ```mermaid
 flowchart TD
-    Z["0. Kirish<br/>(tizim dizayn nima?)"] --> A["1. Tizimlar negizi<br/>(kompyuter, OS, internet)"]
+    Z["0. Kirish<br/>(System Design nima?)"] --> A["1. Tizimlar negizi<br/>(kompyuter, OS, internet)"]
     A --> B["2. Kengayish usullari<br/>(scaling, LB, CDN, gateway)"]
     B --> C["3. Ma'lumotlar ombori<br/>(ACID, indeks, sharding)"]
     C --> D["4. Keshlash<br/>(strategiyalar, TTL, Redis)"]
@@ -20,11 +20,11 @@ flowchart TD
 
 ## Modul 0 — Kirish
 
-> Tizim dizayn nima, nima uchun muhim va intervyuda qanday yondashiladi — kursning poydevori.
+> System Design nima, nima uchun muhim va intervyuda qanday yondashiladi — kursning poydevori.
 
 | # | Mavzu | Fayl |
 |---|-------|------|
-| 1 | Tizim dizayn nima? Reliability, metrikalar, interview bosqichlari | [01-tizim-dizayn-nima.md](00-kirish/01-tizim-dizayn-nima.md) |
+| 1 | System Design nima? Reliability, metrikalar, interview bosqichlari | [01-tizim-dizayn-nima.md](00-kirish/01-tizim-dizayn-nima.md) |
 
 ## Modul 1 — Tizimlar negizi
 
@@ -32,11 +32,11 @@ flowchart TD
 
 | # | Mavzu | Fayl |
 |---|-------|------|
-| 1 | Kompyuter anatomiyasi | [01-kompyuter-anatomiyasi.md](01-tizimlar-negizi/01-kompyuter-anatomiyasi.md) |
-| 2 | Operatsion tizim va abstraksiya | [02-operatsion-tizim-va-abstraksiya.md](01-tizimlar-negizi/02-operatsion-tizim-va-abstraksiya.md) |
-| 3 | Dastur, dasturlash tili va dasturchi | [03-dastur-dasturlash-tili-va-dasturchi.md](01-tizimlar-negizi/03-dastur-dasturlash-tili-va-dasturchi.md) |
-| 4 | Internet tarmog'i va protokollari | [04-internet-tarmogi-va-protokollari.md](01-tizimlar-negizi/04-internet-tarmogi-va-protokollari.md) |
-| 5 | API uslublari: REST, GraphQL, gRPC (Go amaliyoti bilan) | [05-api-uslublari-rest-graphql-grpc.md](01-tizimlar-negizi/05-api-uslublari-rest-graphql-grpc.md) |
+| 1 | Kompyuter anatomiyasi | [01-kompyuter-anatomiyasi.md](1-tizimlar-negizi/01-kompyuter-anatomiyasi.md) |
+| 2 | Operatsion tizim va abstraksiya | [02-operatsion-tizim-va-abstraksiya.md](1-tizimlar-negizi/02-operatsion-tizim-va-abstraksiya.md) |
+| 3 | Dastur, dasturlash tili va dasturchi | [03-dastur-dasturlash-tili-va-dasturchi.md](1-tizimlar-negizi/03-dastur-dasturlash-tili-va-dasturchi.md) |
+| 4 | Internet tarmog'i va protokollari | [04-internet-tarmogi-va-protokollari.md](1-tizimlar-negizi/04-internet-tarmogi-va-protokollari.md) |
+| 5 | API uslublari: REST, GraphQL, gRPC (Go amaliyoti bilan) | [05-api-uslublari-rest-graphql-grpc.md](1-tizimlar-negizi/05-api-uslublari-rest-graphql-grpc.md) |
 
 ## Modul 2 — Kengayish usullari
 
@@ -44,12 +44,12 @@ flowchart TD
 
 | # | Mavzu | Fayl |
 |---|-------|------|
-| 1 | Vertikal va gorizontal kengayish | [01-vertikal-va-gorizontal-kengayish.md](02-kengayish-usullari/01-vertikal-va-gorizontal-kengayish.md) |
-| 2 | Yuklanishni taqsimlash (load balancing) + Nginx, health check | [02-load-balancing.md](02-kengayish-usullari/02-load-balancing.md) |
-| 3 | Kengayish qiyinchiligi: stateful/stateless | [03-stateful-va-stateless.md](02-kengayish-usullari/03-stateful-va-stateless.md) |
-| 4 | CDN bilan kontentni yetkazish | [04-cdn.md](02-kengayish-usullari/04-cdn.md) |
-| 5 | Rate limiting va backpressure | [05-rate-limiting-va-backpressure.md](02-kengayish-usullari/05-rate-limiting-va-backpressure.md) |
-| 6 | API Gateway — yagona kirish nuqtasi ➕ | [06-api-gateway.md](02-kengayish-usullari/06-api-gateway.md) |
+| 1 | Vertikal va gorizontal kengayish | [01-vertikal-va-gorizontal-kengayish.md](2-kengayish-usullari/01-vertikal-va-gorizontal-kengayish.md) |
+| 2 | Yuklanishni taqsimlash (load balancing) + Nginx, health check | [02-load-balancing.md](2-kengayish-usullari/02-load-balancing.md) |
+| 3 | Kengayish qiyinchiligi: stateful/stateless | [03-stateful-va-stateless.md](2-kengayish-usullari/03-stateful-va-stateless.md) |
+| 4 | CDN bilan kontentni yetkazish | [04-cdn.md](2-kengayish-usullari/04-cdn.md) |
+| 5 | Rate limiting va backpressure | [05-rate-limiting-va-backpressure.md](2-kengayish-usullari/05-rate-limiting-va-backpressure.md) |
+| 6 | API Gateway — yagona kirish nuqtasi ➕ | [06-api-gateway.md](2-kengayish-usullari/06-api-gateway.md) |
 
 ## Modul 3 — Ma'lumotlar ombori
 
@@ -57,11 +57,11 @@ flowchart TD
 
 | # | Mavzu | Fayl |
 |---|-------|------|
-| 1 | Ma'lumot saqlashdagi talablar (ACID) | [01-acid-va-tranzaksiyalar.md](03-malumotlar-ombori/01-acid-va-tranzaksiyalar.md) |
-| 2 | Ma'lumotlar ombori oilalari + DB tanlash framework'i | [02-malumotlar-ombori-oilalari.md](03-malumotlar-ombori/02-malumotlar-ombori-oilalari.md) |
-| 3 | Qidiruvni tezlashtirish — B-tree indeksi | [03-b-tree-indeks.md](03-malumotlar-ombori/03-b-tree-indeks.md) |
-| 4 | Replication va sharding + Go ShardRouter | [04-replication-va-sharding.md](03-malumotlar-ombori/04-replication-va-sharding.md) |
-| 5 | CAP teoremasi, PACELC va consistency darajalari | [05-cap-teoremasi.md](03-malumotlar-ombori/05-cap-teoremasi.md) |
+| 1 | Ma'lumot saqlashdagi talablar (ACID) | [01-acid-va-tranzaksiyalar.md](3-malumotlar-ombori/01-acid-va-tranzaksiyalar.md) |
+| 2 | Ma'lumotlar ombori oilalari + DB tanlash framework'i | [02-malumotlar-ombori-oilalari.md](3-malumotlar-ombori/02-malumotlar-ombori-oilalari.md) |
+| 3 | Qidiruvni tezlashtirish — B-tree indeksi | [03-b-tree-indeks.md](3-malumotlar-ombori/03-b-tree-indeks.md) |
+| 4 | Replication va sharding + Go ShardRouter | [04-replication-va-sharding.md](3-malumotlar-ombori/04-replication-va-sharding.md) |
+| 5 | CAP teoremasi, PACELC va consistency darajalari | [05-cap-teoremasi.md](3-malumotlar-ombori/05-cap-teoremasi.md) |
 
 ## Modul 4 — Keshlash (Caching)
 
@@ -69,10 +69,10 @@ flowchart TD
 
 | # | Mavzu | Fayl |
 |---|-------|------|
-| 1 | O'qishni arzonlashtirish strategiyalari | [01-oqish-strategiyalari.md](04-caching/01-oqish-strategiyalari.md) |
-| 2 | Ma'lumot eskirdimi? ETag, TTL & Jitter | [02-malumot-eskirishi-etag-ttl-jitter.md](04-caching/02-malumot-eskirishi-etag-ttl-jitter.md) |
-| 3 | Yozishni kechiktirish (eventual consistency) | [03-yozishni-kechiktirish-eventual-consistency.md](04-caching/03-yozishni-kechiktirish-eventual-consistency.md) |
-| 4 | Kesh amaliyotda: Redis, multi-level, leaderboard ➕ | [04-kesh-amaliyotda.md](04-caching/04-kesh-amaliyotda.md) |
+| 1 | O'qishni arzonlashtirish strategiyalari | [01-oqish-strategiyalari.md](4-caching/01-oqish-strategiyalari.md) |
+| 2 | Ma'lumot eskirdimi? ETag, TTL & Jitter | [02-malumot-eskirishi-etag-ttl-jitter.md](4-caching/02-malumot-eskirishi-etag-ttl-jitter.md) |
+| 3 | Yozishni kechiktirish (eventual consistency) | [03-yozishni-kechiktirish-eventual-consistency.md](4-caching/03-yozishni-kechiktirish-eventual-consistency.md) |
+| 4 | Kesh amaliyotda: Redis, multi-level, leaderboard ➕ | [04-kesh-amaliyotda.md](4-caching/04-kesh-amaliyotda.md) |
 
 ## Modul 5 — Hodisa ustida qurish
 
@@ -80,11 +80,11 @@ flowchart TD
 
 | # | Mavzu | Fayl |
 |---|-------|------|
-| 1 | Hodisalarni aniqlash (event-driven development) | [01-event-driven-development.md](05-hodisa-ustida-qurish/01-event-driven-development.md) |
-| 2 | Xabarlar yuborish tizimi (messaging queue) | [02-messaging-queue.md](05-hodisa-ustida-qurish/02-messaging-queue.md) |
-| 3 | Obuna bo'lish usullari (pub/sub & fan-out) | [03-pub-sub-va-fan-out.md](05-hodisa-ustida-qurish/03-pub-sub-va-fan-out.md) |
-| 4 | Monolith, microservices, service discovery + circuit breaker | [04-monolith-microservices-service-discovery.md](05-hodisa-ustida-qurish/04-monolith-microservices-service-discovery.md) |
-| 5 | Kafka amaliyotda, Saga va Outbox pattern'lari ➕ | [05-kafka-saga-va-outbox.md](05-hodisa-ustida-qurish/05-kafka-saga-va-outbox.md) |
+| 1 | Hodisalarni aniqlash (event-driven development) | [01-event-driven-development.md](5-hodisa-ustida-qurish/01-event-driven-development.md) |
+| 2 | Xabarlar yuborish tizimi (messaging queue) | [02-messaging-queue.md](5-hodisa-ustida-qurish/02-messaging-queue.md) |
+| 3 | Obuna bo'lish usullari (pub/sub & fan-out) | [03-pub-sub-va-fan-out.md](5-hodisa-ustida-qurish/03-pub-sub-va-fan-out.md) |
+| 4 | Monolith, microservices, service discovery + circuit breaker | [04-monolith-microservices-service-discovery.md](5-hodisa-ustida-qurish/04-monolith-microservices-service-discovery.md) |
+| 5 | Kafka amaliyotda, Saga va Outbox pattern'lari ➕ | [05-kafka-saga-va-outbox.md](5-hodisa-ustida-qurish/05-kafka-saga-va-outbox.md) |
 
 ## Modul 6 — Suhbatga tayyorgarlik
 
@@ -92,12 +92,12 @@ flowchart TD
 
 | # | Mavzu | Fayl |
 |---|-------|------|
-| 1 | Tizim talablarini yig'ish — funksional talablar | [01-tizim-talablarini-yigish.md](06-suhbatga-tayyorgarlik/01-tizim-talablarini-yigish.md) |
-| 2 | URL Shortener — warm-up case study (Go bilan) | [02-url-shortener.md](06-suhbatga-tayyorgarlik/02-url-shortener.md) |
-| 3 | Twitter arxitekturasi — mashhurlik muammosi | [03-twitter-arxitekturasi.md](06-suhbatga-tayyorgarlik/03-twitter-arxitekturasi.md) |
-| 4 | WhatsApp arxitekturasi — 1 million connection | [04-whatsapp-arxitekturasi.md](06-suhbatga-tayyorgarlik/04-whatsapp-arxitekturasi.md) |
-| 5 | Uber arxitekturasi — haydovchi topish texnikasi | [05-uber-arxitekturasi.md](06-suhbatga-tayyorgarlik/05-uber-arxitekturasi.md) |
-| 6 | Qo'shimcha materiallar: maqolalar & tavsiyalar | [06-qoshimcha-materiallar.md](06-suhbatga-tayyorgarlik/06-qoshimcha-materiallar.md) |
+| 1 | Tizim talablarini yig'ish — funksional talablar | [01-tizim-talablarini-yigish.md](6-suhbatga-tayyorgarlik/01-tizim-talablarini-yigish.md) |
+| 2 | URL Shortener — warm-up case study (Go bilan) | [02-url-shortener.md](6-suhbatga-tayyorgarlik/02-url-shortener.md) |
+| 3 | Twitter arxitekturasi — mashhurlik muammosi | [03-twitter-arxitekturasi.md](6-suhbatga-tayyorgarlik/03-twitter-arxitekturasi.md) |
+| 4 | WhatsApp arxitekturasi — 1 million connection | [04-whatsapp-arxitekturasi.md](6-suhbatga-tayyorgarlik/04-whatsapp-arxitekturasi.md) |
+| 5 | Uber arxitekturasi — haydovchi topish texnikasi | [05-uber-arxitekturasi.md](6-suhbatga-tayyorgarlik/05-uber-arxitekturasi.md) |
+| 6 | Qo'shimcha materiallar: maqolalar & tavsiyalar | [06-qoshimcha-materiallar.md](6-suhbatga-tayyorgarlik/06-qoshimcha-materiallar.md) |
 
 ➕ — eski kursdan birlashtirilgan (merge qilingan) yangi darslar. Bundan tashqari ko'plab darslarga eski kursdagi Go kod misollari "Go amaliyoti" bo'limlari sifatida singdirilgan.
 

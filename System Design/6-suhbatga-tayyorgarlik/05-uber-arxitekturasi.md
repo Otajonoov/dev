@@ -369,9 +369,9 @@ Geo qidiruv ikki marta: (1) mijozga yaqin restoranlar; (2) restoranga yaqin bo's
 ## 🔁 Takrorlash
 
 **Bog'liq oldingi mavzular:**
-- [Ma'lumotlar ombori — Replication va Sharding](../03-malumotlar-ombori/04-replication-va-sharding.md) — geografik sharding
-- [Caching — o'qish strategiyalari](../04-caching/01-oqish-strategiyalari.md) — in-memory geo index
-- [Kengayish usullari — Load Balancing](../02-kengayish-usullari/02-load-balancing.md) — yozish yukini tarqatish
+- [Ma'lumotlar ombori — Replication va Sharding](../3-malumotlar-ombori/04-replication-va-sharding.md) — geografik sharding
+- [Caching — o'qish strategiyalari](../4-caching/01-oqish-strategiyalari.md) — in-memory geo index
+- [Kengayish usullari — Load Balancing](../2-kengayish-usullari/02-load-balancing.md) — yozish yukini tarqatish
 - [WhatsApp arxitekturasi](04-whatsapp-arxitekturasi.md) — real-time va yozish yuki
 
 **Takrorlash jadvali:**

@@ -343,9 +343,9 @@ Tizim bir zumda emas, **bir necha lahzadan keyin** izchil holatga keladi. Masala
 ## 🔁 Takrorlash
 
 - **Bog'liq oldingi mavzular:**
-  - [../02-kengayish-usullari/](../02-kengayish-usullari/) — throughput va yukni taqsimlash (async spike'larni yutadi)
-  - [../03-malumotlar-ombori/](../03-malumotlar-ombori/) — eventual consistency va replikatsiya bilan bog'liq
-  - [../04-caching/](../04-caching/) — cache invalidatsiyani ko'pincha event orqali qilishadi
+  - [../2-kengayish-usullari/](../2-kengayish-usullari/) — throughput va yukni taqsimlash (async spike'larni yutadi)
+  - [../3-malumotlar-ombori/](../3-malumotlar-ombori/) — eventual consistency va replikatsiya bilan bog'liq
+  - [../4-caching/](../4-caching/) — cache invalidatsiyani ko'pincha event orqali qilishadi
 - **Keyingi dars:** [02-messaging-queue.md](02-messaging-queue.md) — event'lar aslida qayerda saqlanadi va tashiladi?
 - **Takrorlash jadvali:** bu "O'z-o'zini tekshir" savollariga → **ertaga** → **3 kundan keyin** → **1 haftadan keyin** qaytib javob ber.
 - **Feynman testi:** Event-driven arxitekturani kod so'zlarini ishlatmasdan, do'stingga 3 jumlada tushuntirib ber. (Maslahat: "e'lon taxtasi" analogiyasidan boshla.)

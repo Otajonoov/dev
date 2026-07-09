@@ -432,6 +432,6 @@ Relay event'ni Kafka'ga yuborib, `sent=true` qilishdan oldin qulasa, qayta ishga
   - [02-messaging-queue.md](02-messaging-queue.md) — at-least-once, idempotency, RabbitMQ vs Kafka (bu darsda ular ustiga qurdik)
   - [03-pub-sub-va-fan-out.md](03-pub-sub-va-fan-out.md) — Kafka topic/partition/offset/consumer group, key va ordering
   - [04-monolith-microservices-service-discovery.md](04-monolith-microservices-service-discovery.md) — har servisga alohida DB (Saga muammosining ildizi)
-  - [../03-malumotlar-ombori/](../03-malumotlar-ombori/) — DB tranzaksiyasi va ACID (Outbox shunga tayanadi)
+  - [../3-malumotlar-ombori/](../3-malumotlar-ombori/) — DB tranzaksiyasi va ACID (Outbox shunga tayanadi)
 - **Takrorlash jadvali:** "O'z-o'zini tekshir" savollariga → **ertaga** → **3 kundan keyin** → **1 haftadan keyin** qaytib javob ber.
 - **Feynman testi:** Saga va Outbox'ni kod ishlatmasdan, do'stingga 3 jumlada tushuntir. (Maslahat: Saga uchun "sayohat bron qilish va bekor qilish", Outbox uchun "stoldagi jo'natiladigan lagancha" analogiyalaridan boshla.)

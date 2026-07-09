@@ -281,8 +281,8 @@ Global video streaming platforma dizayn qil (YouTube kabi). Foydalanuvchilar dun
 **Bog'liq oldingi mavzular:**
 - [Modul 2: Vertikal va gorizontal kengayish](./01-vertikal-va-gorizontal-kengayish.md) — u hisoblash muammosini, CDN esa masofa muammosini yechadi; farqini solishtir.
 - [Modul 2: Load balancing](./02-load-balancing.md) — origin serverlar ham LB orqasida turadi; CDN esa ular oldiga joylashadi.
-- [1-modul: Internet tarmog'i va protokollari](../01-tizimlar-negizi/04-internet-tarmogi-va-protokollari.md) — latency, RTT, yorug'lik tezligi va router hop'lari shu yerda o'rganilgan.
-- [1-modul: Kompyuter anatomiyasi](../01-tizimlar-negizi/01-kompyuter-anatomiyasi.md) — xotira ierarxiyasi; cache tamoyili shundan keladi.
+- [1-modul: Internet tarmog'i va protokollari](../1-tizimlar-negizi/04-internet-tarmogi-va-protokollari.md) — latency, RTT, yorug'lik tezligi va router hop'lari shu yerda o'rganilgan.
+- [1-modul: Kompyuter anatomiyasi](../1-tizimlar-negizi/01-kompyuter-anatomiyasi.md) — xotira ierarxiyasi; cache tamoyili shundan keladi.
 
 **Takrorlash jadvali:**
 - **Ertaga:** statik va dinamik kontentga 3 tadan misol yoz; qaysi biri keshlanadi?

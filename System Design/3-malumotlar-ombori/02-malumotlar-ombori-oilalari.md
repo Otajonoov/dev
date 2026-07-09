@@ -480,7 +480,7 @@ tavsiyasi, (d) real-time "hozir nechta odam tinglayapti" hisoblagichi. Har birig
 
 **Bog'liq oldingi mavzular:**
 - [01-acid-va-tranzaksiyalar.md](01-acid-va-tranzaksiyalar.md) — ACID nega relational DB'ning kuchli tomoni.
-- [2-modul: Kengayish usullari](../02-kengayish-usullari/) — gorizontal masshtab NoSQL oilalari uchun nega markaziy.
+- [2-modul: Kengayish usullari](../2-kengayish-usullari/) — gorizontal masshtab NoSQL oilalari uchun nega markaziy.
 
 **Shu modul ichida keyingi:**
 - [03-b-tree-indeks.md](03-b-tree-indeks.md) — relational DB ma'lumotni tez topish uchun indeksdan qanday foydalanadi.
