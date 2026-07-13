@@ -8,7 +8,7 @@
 | ---------- | -------- |
 | golang     | — |
 | database   | — |
-| network    | — |
+| network    | To'liq kurs: [3. Network/](../3.%20Network/README.md) (12 modul, 85 dars) |
 | algorithms | — |
 
 ## Mavzular
