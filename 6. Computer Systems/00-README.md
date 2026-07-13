@@ -64,19 +64,19 @@ JARAYON ESLATMALARI (yangi sessiya uchun):
 | 14 | [Zamonaviy CPU va Instruction-Level Parallelism](14-instruction-level-parallelism.md) | 5.7–5.10 | ✅ |
 | 15 | [Profiling va Bottleneck'lar](15-profiling-bottlenecks.md) | 5.11–5.14 | ✅ |
 | 16 | [Storage texnologiyalari va Locality](16-storage-locality.md) | 6.1–6.3 | ✅ |
-| 17 | Cache Memories | 6.4 | ⬜ |
-| 18 | Cache-Friendly Kod | 6.5–6.6 | ⬜ |
-| 19 | Static Linking va ELF | 7.1–7.9 | ⬜ |
-| 20 | Dynamic Linking va PIC | 7.10–7.13 | ⬜ |
-| 21 | Exceptions va Processlar | 8.1–8.3 | ⬜ |
-| 22 | Process Control: fork, exec, wait | 8.4 | ⬜ |
-| 23 | Signals | 8.5–8.7 | ⬜ |
-| 24 | Virtual Memory tushunchalari | 9.1–9.6 | ⬜ |
-| 25 | Linux Memory System va mmap | 9.7–9.8 | ⬜ |
-| 26 | Dynamic Memory Allocation (malloc ichi) | 9.9 | ⬜ |
-| 27 | Garbage Collection va Memory Bug'lar | 9.10–9.11 | ⬜ |
-| 28 | Unix I/O: fayl deskriptorlari | 10.1–10.4 | ⬜ |
-| 29 | Fayl metadata, sharing, redirection | 10.5–10.9 | ⬜ |
+| 17 | [Cache Memories](17-cache-memories.md) | 6.4 | ✅ |
+| 18 | [Cache-Friendly Kod](18-cache-friendly-code.md) | 6.5–6.6 | ✅ |
+| 19 | [Static Linking va ELF](19-static-linking.md) | 7.1–7.9 | ✅ |
+| 20 | [Dynamic Linking va PIC](20-dynamic-linking.md) | 7.10–7.13 | ✅ |
+| 21 | [Exceptions va Processlar](21-exceptions-processes.md) | 8.1–8.3 | ✅ |
+| 22 | [Process Control: fork, exec, wait](22-process-control.md) | 8.4 | ✅ |
+| 23 | [Signals](23-signals.md) | 8.5–8.7 | ✅ |
+| 24 | [Virtual Memory tushunchalari](24-virtual-memory.md) | 9.1–9.6 | ✅ |
+| 25 | [Linux Memory System va mmap](25-linux-memory-mmap.md) | 9.7–9.8 | ✅ |
+| 26 | [Dynamic Memory Allocation (malloc ichi)](26-dynamic-memory-allocation.md) | 9.9 | ✅ |
+| 27 | [Garbage Collection va Memory Bug'lar](27-garbage-collection.md) | 9.10–9.11 | ✅ |
+| 28 | [Unix I/O: fayl deskriptorlari](28-unix-io.md) | 10.1–10.4 | ✅ |
+| 29 | [Fayl metadata, sharing, redirection](29-file-metadata-sharing.md) | 10.5–10.9 | ✅ |
 | 30 | Sockets Interface | 11.1–11.4 | ⬜ |
 | 31 | Web Server ichidan | 11.5–11.6 | ⬜ |
 | 32 | Concurrency modellari: process, epoll, thread | 12.1–12.3 | ⬜ |
