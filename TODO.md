@@ -1,4 +1,4 @@
-Qizi
+
 Promt: sql atamalarniham tarjima qilma, masalan:
 table - jadval
 system catalog - tizim katalogi

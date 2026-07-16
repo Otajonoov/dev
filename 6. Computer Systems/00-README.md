@@ -32,7 +32,7 @@ JARAYON ESLATMALARI (yangi sessiya uchun):
 - Subagent tekshiruvi: kirill harflar (grep -P '[а-яА-ЯёЁ]'), U+02BC apostrof, faqat shu papka ichidagi linklar, verify qilinmagan output.
 - MUHIM SABOQ (09-dars): subagent brief uzilib qolsa, assembly listinglarni O'ZI TO'QIB chiqaradi (add3/pick misollari
   noto'g'ri chiqqan edi). Shuning uchun subagent yozgan HAR assembly blokini `gcc -Og -S` bilan qayta kompilyatsiya
-  qilib solishtir. Brief to'liq va uzilmagan bo'lsa muammо kamroq, lekin tekshiruv baribir majburiy.
+  qilib solishtir. Brief to'liq va uzilmagan bo'lsa muammo kamroq, lekin tekshiruv baribir majburiy.
 - Linux kursi linklari: ../5. Linux/1. Linux commands/ (05-redirection-and-pipelines.md, 08-processes.md).
 - Bitta iteratsiya = bitta dars. Parallel yozish taqiqlangan.
 -->
@@ -41,8 +41,8 @@ JARAYON ESLATMALARI (yangi sessiya uchun):
 
 - [x] Phase 0 — Setup (PDF extract, Docker verify muhiti, README skeleti)
 - [x] Phase 1 — Reja foydalanuvchi tomonidan TASDIQLANGAN (2026-07-12, 34 dars)
-- [ ] Phase 2 — Darslar (quyidagi checklist)
-- [ ] Phase 3 — Final assembly (cross-linklar, sifat tekshiruvlari)
+- [x] Phase 2 — Darslar (34/34 ✅)
+- [x] Phase 3 — Final assembly (cross-linklar, sifat tekshiruvlari toza o'tdi)
 
 ## Kurs xaritasi
 
@@ -77,12 +77,60 @@ JARAYON ESLATMALARI (yangi sessiya uchun):
 | 27 | [Garbage Collection va Memory Bug'lar](27-garbage-collection.md) | 9.10–9.11 | ✅ |
 | 28 | [Unix I/O: fayl deskriptorlari](28-unix-io.md) | 10.1–10.4 | ✅ |
 | 29 | [Fayl metadata, sharing, redirection](29-file-metadata-sharing.md) | 10.5–10.9 | ✅ |
-| 30 | Sockets Interface | 11.1–11.4 | ⬜ |
-| 31 | Web Server ichidan | 11.5–11.6 | ⬜ |
-| 32 | Concurrency modellari: process, epoll, thread | 12.1–12.3 | ⬜ |
-| 33 | Shared Variables va Semaphore'lar | 12.4–12.5 | ⬜ |
-| 34 | Parallelism va Concurrency muammolari | 12.6–12.7 | ⬜ |
+| 30 | [Sockets Interface](30-sockets.md) | 11.1–11.4 | ✅ |
+| 31 | [Web Server ichidan](31-web-server.md) | 11.5–11.6 | ✅ |
+| 32 | [Concurrency modellari: process, epoll, thread](32-concurrency-models.md) | 12.1–12.3 | ✅ |
+| 33 | [Shared Variables va Semaphore'lar](33-shared-variables.md) | 12.4–12.5 | ✅ |
+| 34 | [Parallelism va Concurrency muammolari](34-parallelism-issues.md) | 12.6–12.7 | ✅ |
 
 ## Qanday o'rganish kerak
 
-(Phase 3 da to'ldiriladi.)
+Kurs **34 darsdan** iborat, ~18 000 qator. Har dars oldingisiga tayanadi — **tartib bilan** o'qing.
+
+### Kursning tuzilishi
+
+| Blok | Darslar | Nima beradi |
+|------|---------|-------------|
+| **Ma'lumot** | 02–05 | Bit, integer overflow, IEEE 754 — nega `0.1+0.2 != 0.3` |
+| **Mashina** | 06–11 | Assembly o'qish, stack frame, buffer overflow |
+| **CPU** | 12–15 | Pipeline, ILP, optimizatsiya chegaralari, profiling (Amdahl) |
+| **Xotira** | 16–18 | Cache, locality — sikl tartibi 14x tezlik beradi |
+| **Linking** | 19–20 | ELF, `undefined reference`, nega Go binary static |
+| **OS** | 21–23 | Syscall narxi, fork/exec, graceful shutdown |
+| **Virtual xotira** | 24–27 | Page table, RSS/VSZ va OOM, malloc ichi, GC |
+| **I/O** | 28–29 | File descriptor, short count, buffering |
+| **Tarmoq** | 30–31 | Socket API, o'z HTTP serveringni yozasan |
+| **Concurrency** | 32–34 | Goroutine = epoll + thread, race, deadlock |
+
+### Har darsni qanday o'qish
+
+1. **"Nima uchun kerak"** — motivatsiyani tushun (bu bilim qaysi production savolga javob beradi).
+2. **"Nazariya"** — diagrammalarni o'zing qayta chiz. Sxemani ko'chirmasdan chiza olsang — tushungansan.
+3. **"Kod va isbot"** — kodni **o'zing ishga tushir** (pastdagi muhit). Faqat o'qish yetarli emas.
+4. **"Go dasturchiga ko'prik"** — eng qimmatli qism: C mexanizmi Go'da qanday namoyon bo'ladi.
+5. **"Amaliy mashqlar"** — yechimni ochishdan **oldin** o'zing yech. Bu retrieval practice, eng samarali usul.
+
+### Verify muhitini ko'tarish
+
+Barcha kod misollari shu muhitda tekshirilgan (assembly x86-64 bo'lishi shart — kitob shuni o'rgatadi):
+
+```bash
+docker run -d --name csapp --platform linux/amd64 ubuntu:24.04 sleep infinity
+docker exec csapp bash -c "apt-get update && apt-get install -y \
+    build-essential gdb binutils valgrind golang-go strace curl netcat-openbsd"
+docker exec -it csapp bash
+```
+
+**Eslatma:** performance o'lchovlari (12–18 darslar: pipeline, cache, ILP) darslarda **native arm64** (Apple Silicon) da o'lchangan — QEMU emulyatsiya cache va pipeline'ni ko'rsatmaydi. Effekt universal, faqat raqamlar apparatga bog'liq.
+
+### Maslahat
+
+- **Shoshilma.** Bir kunda bir dars — 34 kunda kursni tugatasan. Assembly darslari (06–11) sekinroq ketadi, bu normal.
+- **Kodni o'zgartirib ko'r.** Misolni ishga tushirib, keyin biror sonni/tartibni o'zgartirib qayta chop et — nima o'zgaradi?
+- **O'lchov qil, taxmin qilma** (15-dars). Intuitsiya performance'da tez-tez aldaydi — 18-darsda blocking'ning kitob da'vosiga zid chiqqani buni isbotlaydi.
+
+### Keyingi qadamlar
+
+- Kitobning rasmiy lab'lari: [csapp.cs.cmu.edu](http://csapp.cs.cmu.edu/) (bomb lab, attack lab, malloc lab, shell lab)
+- Go runtime manbasini o'qish: `runtime/proc.go` (scheduler), `runtime/mgc.go` (GC)
+- O'z servisingni `pprof` bilan profil qil — endi natijani o'qiy olasan

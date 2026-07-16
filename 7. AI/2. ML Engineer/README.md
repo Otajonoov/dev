@@ -2,11 +2,13 @@
 
 Go backend fonidan ML Engineer kasbiga o'tish uchun o'quv reja. Repodagi mavjud bilimlar (Database, Algorithm, Linux, DevOps, System Design) bu yo'lning infratuzilma qismini yopadi — bu papka esa yetishmayotgan ML qismini yopadi.
 
+Tezkor ish topish yo'li — `../1. AI Engineer/` (LLM integratsiya, 2–4 oy). Bu papka esa uzoq muddatli chuqurlik: model qurish, o'rgatish va production'da yuritish. Tavsiya etilgan ketma-ketlik `../README.md` da.
+
 ## Struktura va tavsiya etilgan tartib
 
 ```
-1. Python ecosystem/     ← boshlanish nuqtasi
-   1. Python             — til asoslari (Go biladigan odam uchun tez)
+1. Python ecosystem/     ← boshlanish nuqtasi (ikkala yo'lga poydevor)
+   1. Python             — til asoslari (Basics + Advanced tayyor)
    2. NumPy              — vektorlashgan hisob-kitob
    3. Pandas             — data bilan ishlash (SQL bilimiga bog'lanadi)
    4. Matplotlib         — visualization
@@ -34,13 +36,10 @@ Go backend fonidan ML Engineer kasbiga o'tish uchun o'quv reja. Repodagi mavjud 
    4. Data formats (Parquet, Arrow) — column-oriented formatlar
    5. Feature store      — feature'larni saqlash va qayta ishlatish
 
-5. LLM va GenAI/         ← Deep learning'dan keyingi tabiiy qadam, 2026 bozorining eng katta talabi
+5. LLM internals/        ← Deep learning'dan keyin: model ichini tushunish
    1. Transformers       — zamonaviy modellarning arxitekturasi
-   2. Embeddings         — matnni vektorga aylantirish
-   3. Vector databases   — semantic search (pgvector — Postgres bilimiga bog'lanadi)
-   4. RAG                — retrieval-augmented generation
-   5. Fine-tuning        — tayyor modelni moslashtirish
-   6. AI Agents          — tool-use, multi-agent tizimlar
+   2. Fine-tuning        — tayyor modelni moslashtirish
+   (amaliy qismi — Embeddings, Vector DB, RAG, Agents — `../1. AI Engineer/` da)
 
 6. ML System Design/     ← interview bosqichi (System Design bilimiga bog'lanadi)
    Recommender, search, fraud detection kabi tizimlar dizayni
